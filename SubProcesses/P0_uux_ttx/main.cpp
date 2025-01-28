@@ -54,12 +54,12 @@ int main(int argc, char* argv[])
   if(argc!=4)
   {
     std::cout << "This function requires 3 arguments\n"
-	      << "  - PDF ID (1=CT18 NLO, 2=CT14LN, 3=CT14LL, 4=CTEQ6M)\n"
+	      << "  - PDF ID (14400=CT18 NLO, 21100=MSTW2008nlo68cl, 3=CT14LL, 4=CTEQ6M)\n"
 	      << "Initial point and final point \n";
     exit(0);
   }	
 
-  
+    
   const clock_t begin_time = clock();
   
   std::ofstream TestdM;
@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
   double Mf=500.;
   //double Mf=4000.+2.*Mt;
   double xi=1e-10, xf=1.;
-
   
   int Ncores, CurrentCore;
   std::istringstream ncores(argv[3]); 
@@ -92,6 +91,7 @@ int main(int argc, char* argv[])
   //int nstep[Ncores]={20,20,20,20,20,20,20,20,20,20};
   //int nstep[Ncores]={25,25,25,25,25,25,25,25,25,25};
 
+  
   std::string name1("param_card.dat");
   std::string name2("../MadLoop5_resources");
   const size_t length = name1.length()+10;
@@ -116,13 +116,13 @@ int main(int argc, char* argv[])
     }
 
   //double xic= xi + (xf-xi)*double(initstep)/double(ntot-1)+(xf-xi)*0.5/double(ntot-1);
-  double Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);
+  double Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);// mass invariant
   double sc=s0, ML=Mic;
   
-  const std::string & pathstr="/home/yehudi/LHAPDF6/share/LHAPDF";
-
+  const std::string & pathstr="/home/matteo/LHAPDF/share/LHAPDF";
   setPaths(pathstr);
-
+  
+  
   int melo=0;
   string name, tag;
   const PDF* F;  
@@ -133,14 +133,14 @@ int main(int argc, char* argv[])
   else if (PDFID==21100) namePDF = "MSTW2008nlo68cl";
   else if (PDFID==21200) namePDF = "MSTW2008nnlo68cl";
   F=mkPDF(namePDF,0);
-
+  
   if(chan==0) tag="qqb";
   else if(chan==1) tag="gg";
   DiffdM.open("DiffdM_"+tag+".txt");
   TestdM.open("BorndM_"+tag+".txt");
   ExpanddM.open("ExpanddM_"+tag+".txt");
   ResumdM.open("ResumdM_"+tag+".txt");
-
+  
   int ji=0;
   for(int ic=0; ic < nsteps; ic++) 
     {
@@ -148,38 +148,38 @@ int main(int argc, char* argv[])
       double s=sc*sc;
 
       //for(int mu1=0; mu1< 1; mu1++)
-      for(int mu1=-1; mu1< 2; mu1++)
+      for(int mu1=-1; mu1< 2; mu1++)// variation point muf
 	{
 	  muF=ML*pow(2.,mu1)/2.;
+    //momentum fraction limite
 	  xmax=max(0.8,muF/sc*10.);
 	  xmin=min(muF/sc/10.,0.01);
 
 	  //Doing the fit, carefull: only valid for CT18NLO (hard coded in src/pdfN.cpp)
 	  pdfFit(A1min,A,-1.6,-1.6,-1.6); //Mandatory for each muF=M if dynamic scale
 	  
-	  for(int mu2=-1; mu2< 2; mu2++)
+	  for(int mu2=-1; mu2< 2; mu2++)// variation point mur
 	    {
 	      //if(mu1==0 and mu2==0)
-	      if(mu1*mu2>=0)
+	      if(mu1*mu2>=0)// exclusion in variation point
 		{
 		  muR=ML*pow(2.,mu2)/2.;
-		  update_mur_(muR);
+		  update_mur_(muR);// For Madloop
 		  alpha_s=F->alphasQ(muR);
-		  
-		  int mel=0;
+		  int mel=0;//Born
 		  double res=0., err=0., chi=0.;
-		  Integrate(res,err,s,mel,M2);
+		  //Integrate(res,err,s,mel,M2);
 		  //IntegrateVegas(res,err,chi,s,mel,M2);
-		  //IntegratePhase(res,err,chi,s,mel,M2);
+		  IntegratePhase(res,err,chi,s,mel,M2);
 		  std::cout << "Born done " << std::endl;
 		  // Writing in output file
 		  TestdM << res << ",";
 		  
 		  mel=1;
 		  double resD=0., errD=0.,chiD=0.;
-		  Integrate(resD,errD,s,mel,M2);
+		  //Integrate(resD,errD,s,mel,M2);
 		  //IntegrateVegas(resD,errD,chiD,s,mel,M2);
-		  //IntegratePhase(resD,errD,chiD,s,mel,M2);
+		  IntegratePhase(resD,errD,chiD,s,mel,M2);
 		  std::cout << "Diff done " << std::endl;
 		  // Writing in output file
 		  DiffdM << resD << ",";

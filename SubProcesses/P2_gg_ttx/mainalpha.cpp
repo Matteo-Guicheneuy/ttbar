@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
   double Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);
   double sc=s0, M=Mic;
   
-  const std::string & pathstr="/home/yehudi/LHAPDF6/share/LHAPDF";
+  const std::string & pathstr="/home/matteo/LHAPDF/share/LHAPDF";
 
   setPaths(pathstr);
 

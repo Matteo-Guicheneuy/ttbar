@@ -64,9 +64,16 @@ double TotPhaseSpace(double *x, size_t dim, void *params)
     {
       y[j]=x[j];
     }
-  
+  // Generate a point in phase space
   __genps_nbody_MOD_generate_mom(npart,Q,mpart,y,ppart,jac);
-
+  if(jac==0.)
+    {
+      //std::cout << cPS << " is wrong Phase space " << std::endl;                        
+      delete [] ppart;
+      delete [] y;
+      delete [] mpart;
+      return 0.;
+    } 
   // std::cout << " jac = " << jac << std::endl;
   // for(int i=0; i<npart+2; i++)
   //   {

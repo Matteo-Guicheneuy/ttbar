@@ -5,13 +5,13 @@ FF=gfortran## for Fortran
 ###  Directories ###
 SRCDIR=${PWD}/src
 INCDIR=${PWD}/inc
-LHAPDFDIR=$//home/yehudi/LHAPDF6/include
-LHAPDFDIR2=$//home/yehudi/LHAPDF6/share/LHAPDF
+LHAPDFDIR=$//home/matteo/LHAPDF/include
+LHAPDFDIR2=$//home/matteo/LHAPDF/share/LHAPDF
 LIBDIR=${PWD}/lib
 BLDDIR=${PWD}/bld
-GSLDIR=$//home/yehudi/gsl/include
-BOOSTDIR=$//usr/local/boost_1_77_0
-EIGENDIR=$//home/yehudi/eigen-3.4.0
+GSLDIR=$//home/matteo/gsl-2.8
+BOOSTDIR=$//usr/include/boost
+EIGENDIR=$//home/matteo/eigen-3.4.0
 MADLOOPDIR=${PWD}
 MADLOOPRES=${PWD}/MadLoop5_resources
 MPLIBDIR=${PWD}/../../lib
@@ -36,9 +36,9 @@ FOBJS=$(subst .f,.o,$(subst ${SRCDIR},${BLDDIR},${FFILES}))
 
 ### Libraries ###
 LIB=${LIBDIR}/libresum.a
-GSLIB=-L/home/yehudi/gsl/lib -lgsl -lgslcblas
-STLIB= -L/usr/local/gfortran/lib -lm -lgfortran -ldl 
-LHAPDFLIB= -L/home/yehudi/LHAPDF6/lib -lLHAPDF
+GSLIB=-L/usr/lib/x86_64-linux-gnu -lgsl -lgslcblas
+STLIB= -L/usr/lib/gcc/x86_64-linux-gnu/13 -lm -lgfortran 
+LHAPDFLIB= -L/home/matteo/LHAPDF/lib -lLHAPDF
 MADLOOPLIB=-L$(MADLOOPDIR) -lMadLoop
 MPLIB= -L${MPLIBDIR} -ldhelas -lmodel
 LCTLIB= -L${CUTOOLSDIR} -lcts

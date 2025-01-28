@@ -78,7 +78,7 @@ std::complex<double> TraceHSDiff(double *x, int chan, double M2, complex<double>
   Rm=new std::complex<double> *[Len];
   Rdag=new std::complex<double> *[Len];
   Rdagm1=new std::complex<double> *[Len];
-  Lamb=new std::complex<double> [Len];
+  Lamb=new std::complex<double> [Len];// valeur propre
   
   for(int h=0; h < Len; h++)
     {
@@ -126,7 +126,7 @@ std::complex<double> TraceHSDiff(double *x, int chan, double M2, complex<double>
 	   res+=S0t[ka][ji]*H1t[ji][ka];
 	 }
      }
-
+    // kill pointeur
    for (int i=0; i<Len; i++)
      {
        delete [] R[i];
@@ -322,7 +322,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       int ret_code=0;
       double prec_ask=-1;
       double prec_f[2][2]={(0.,0.)};
-
+      // quadri implusion [nparticle][t,x,y,z]
       ppart[0][0]=pow(M2,0.5)/2.;
       ppart[1][0]=pow(M2,0.5)/2.;
       ppart[0][3]=pow(M2,0.5)/2.;
@@ -341,6 +341,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       res+=std::imag(TraceHSDiff(x,chan,M2,xx,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
       res-=std::imag((TraceHSExpDiff(x,chan,M2,xx,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
 
+      // symetry case u ubar and ubar u
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[3][3]=pow(M2,0.5)/2.*Xbet;

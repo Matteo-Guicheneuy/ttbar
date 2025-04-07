@@ -48,58 +48,48 @@ std::complex<double> C0(double a,double b, double c, double m1, double m2, doubl
 // *********************************************************************** //
 
 
-double H0(double *x, int m, int n, int chan, double M2)
+double H0(std::complex<double> N, double Xbet,int m, int n, int chan, double M2)
 {
   double res=0.;
   std::complex<double> i(0.0,1.0);
-  double Xbet=0, bet=0., t=0., u=0., dR=0.;
+  double  t=0., u=0., dR=0.;
   int tmp=0, Len=chan+2, Nsym=1;
 
-  //H0 symmetric
-  if(m>n)
-    {
+  //H0 symmetric we interchange n and m
+  if(m>n){
       tmp=m;
       m=n;
       n=tmp;
     }
-  
-  bet=pow(1.-4.*Mt*Mt/M2,0.5);
-  Xbet=Xcos(x[1])*bet;
+
 
   t=-M2/2.*(1-Xbet);
   u=-M2/2.*(1+Xbet);
 
 
-  if(chan==0)
-    {
-      dR=double(Nc)*2.; //         
-    }
-  else if(chan==1)
-    {
+  if(chan==0) dR=double(Nc)*2.; //         
+
+  else if(chan==1){
       dR=2.*(pow(Nc,2)-1.);// CDR convention          
       Nsym=1;
     }
 
 
-  if(chan==0)
-    {
-      if(m*n==1)
-        {
+  if(chan==0){
+      if(m*n==1){
           res=2.*((pow(t,2)+pow(u,2))/pow(M2,2)+2.*Mt*Mt/M2); //see 0805.1885 or SCET 1003.5827
-	}
+      	}
     }
 
-  else if(chan==1)
-    {
+  else if(chan==1){
       double hgg=0.;
       hgg=pow(M2,2)/2./t/u*(pow(t,2)/pow(M2,2)+pow(u,2)/pow(M2,2)+4.*pow(Mt,2)/M2-4.*pow(Mt,4)/t/u);
       res=hgg;
-      if(m==0)
-        {
+      if(m==0){
           res*=1./double(Nc);
           if(n==0) res*=1./double(Nc);
           else if(n==1) res*=(t-u)/M2;
-	}
+	      }
 
       else if(m==1)
         {
@@ -119,8 +109,7 @@ double H0Phase(double *ppart, int m, int n, int chan, double M2)
   int tmp=0, Len=chan+2, Nsym=1;
   
   //H0 symmetric
-  if(m>n)
-    {
+  if(m>n){
       tmp=m;
       m=n;
       n=tmp;
@@ -158,7 +147,7 @@ double H0Phase(double *ppart, int m, int n, int chan, double M2)
       if(m*n==1)
         {
           res=2.*((pow(t,2)+pow(u,2))/pow(M2,2)+2.*Mt*Mt/M2); //see 0805.1885 or SCET 1003.5827
-	}
+	      }
     }
 
   else if(chan==1)

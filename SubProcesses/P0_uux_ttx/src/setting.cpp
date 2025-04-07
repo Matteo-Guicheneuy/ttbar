@@ -10,9 +10,13 @@
 #include <cstdlib>
 
 // -------- Classes ----------------------------------- //
-
-#include "process.h"	// Process//
+#include "messages.h"     // Message services           //
+#include "process.h"	// Process                        //
+//#include "Constants.h"
 #include "LHAPDF/LHAPDF.h"
+#include "tools.h"
+//#include "PDFfitAN.h"
+#include "main.h"
 
 extern "C" {
   double ct18pdf_(int&, double&, double&);              //            
@@ -20,7 +24,7 @@ extern "C" {
 }; 
 
 // ---------------------------------------------------- //
-extern double MZ, muF, muR, alpha, tw, gu, gd, alpha_s;
+extern double MZ, muF, muR, alpha, tw, gu, gd, alpha_s, A[8][8];
 extern int Nf;
 using namespace std;
 using namespace LHAPDF;
@@ -236,4 +240,199 @@ void EvolvePDF(complex<double> &N, complex<double> q[5], complex<double> qbar[5]
      cmp -= 1.0;
    }
   
+}
+
+
+/////    MY  code     ////
+
+const double Eps = 0.00001;
+const int Nflav= usePDFAnzat ? 1 : 5;
+
+double f_LHAPDF(double x, int i0, const PDF* F)
+{ 
+  double res=0.;
+  if(x > 0 && x < 1) res=F->xfxQ2(i0,x,muF*muF)/x;
+  return res;
+}
+
+double Set_f_LHAPDF(double &x, int i0, const PDF* F, int k)
+{ double eps=0.15*x;
+  //double eps=Eps*x;
+  if(k==0) return f_LHAPDF(x, i0, F);
+  else return x*derive_x_k(f_LHAPDF,x,i0,F , eps,k);
+}
+
+void set_pdf_LHAPDF(const PDF* F , double &x, vector<double>& q, vector<double>& qbar, double &g, const bool usePDFAnzat, int k, bool num)
+{
+  // Quarks PDG list
+  std::vector<int>  idx_q = usePDFAnzat ? vector<int>{8} : vector<int>{1, 2, 3, 4, 5};// d , u , s , c , b
+  std::vector<int>  idx_qb = usePDFAnzat ? vector<int>{8} : vector<int>{-1, -2, -3, -4, -5};// dbar , ubar , sbar , cbar , bbar
+  //PDFs  
+  g = Set_f_LHAPDF(x, 0, F, k);
+  for (int j=0; j<Nflav; j++)
+  {
+    qbar.push_back( Set_f_LHAPDF(x, idx_qb[j], F, k));  // qbar for b, c, s, u
+    q.push_back( Set_f_LHAPDF(x, idx_q[j], F, k));    // q for b, c, s 
+  }
+}
+
+
+//PDF analitic function
+double f(double x, int i0, const PDF* F)
+{
+  return A[i0][0]*pow(x,A[i0][1])*pow(1.-x,A[i0][2])*(1.+A[i0][3]*sqrt(x)+A[i0][4]*x+A[i0][5]*pow(x,1.5)+A[i0][6]*pow(x,2)+A[i0][7]*pow(x, 2.5));
+}
+//PDF Anzat analitic function
+double fAnzat(double x, int i0, const PDF* F)
+{
+  return A[i0][0]*pow(x,A[i0][1])*pow(1.-x,A[i0][2]);
+}
+
+// Derivative of the PDF function at order k numericaly
+double F_real(const double &x, int i0, const PDF* F, const bool usePDFAnzat, int k)
+{ 
+  double eps=Eps*x;
+  if (x>1-5.*Eps*x) return 0;
+  else if(x<5.*Eps*x) return 0;
+  if(k==0) return usePDFAnzat ? fAnzat(x, i0, F) : f(x, i0, F);
+  else return usePDFAnzat ? x*derive_x_k(fAnzat,x,i0,F, eps,k) : x*derive_x_k(f,x,i0,F, eps,k);
+}
+
+// Derivative of the PDF function at order k analiticaly
+double F_real_bis(const double &x, int i0, const PDF* F, const bool usePDFAnzat, int k)
+{
+  // Derivative of PDF in real space
+  if(usePDFAnzat){
+    switch (k){
+       case 0 :return A[i0][0]*pow(x,A[i0][1])*pow(1.-x,A[i0][2]);
+       break;
+       case 1 :return A[i0][0]*pow(x,A[i0][1]+1.)*pow(1.-x,A[i0][2])*(A[i0][1]+1.-x*A[i0][2]/(1.-x));
+       break;
+       //case 2 :return x*(pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]);
+       case 2 :return x*(pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]));
+       break;
+       case 3 :return x*(pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2])+x*(2.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+2.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2])));
+       break;
+       case 4: return x*(pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2])+x*(2.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+2.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])
+-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]))+x*(4.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])-8.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]+4.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]+2.*x*(pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])-3.*pow(1.-1.*
+x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2])+x*(3.*pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])-9.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]+9.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]-3.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]+x*(pow(1.-1.*x,A[i0][2])*pow(x,-3.+A[i0][1])*A[i0][0]*(-2.+
+A[i0][1])*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*A[i0][2]+6.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]-4.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]+pow(1.-1.*x,-4.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-3.+A[i0][2])*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]))));
+       break;
+    }
+  }
+  else{
+    switch (k)
+    {
+    case 0: A[i0][0]*pow(x,A[i0][1])*pow(1.-x,A[i0][2])*(1.+A[i0][3]*sqrt(x)+A[i0][4]*x+A[i0][5]*pow(x,1.5)+A[i0][6]*pow(x,2)+A[i0][7]*pow(x, 2.5));
+      break;
+    case 1: return A[i0][0]*pow(x,A[i0][1]+1.)*pow(1.-x,A[i0][2])*((A[i0][1]+1.-x*A[i0][2]/(1.-x))*(1.+A[i0][3]*sqrt(x)+A[i0][4]*x+A[i0][5]*pow(x,1.5)+A[i0][6]*pow(x,2.)+A[i0][7]*pow(x,2.5))+0.5*A[i0][3]*sqrt(x)+A[i0][4]*x+1.5*A[i0][5]*pow(x,1.5)+2.*A[i0][6]*pow(x,2.)+2.5*A[i0][7]*pow(x,2.5));
+      break;
+    case 2: return x*(pow(1.-x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(A[i0][3]/(2.*sqrt(x))+A[i0][4]+(3.*sqrt(x)*A[i0][5])/2.+2.*x*A[i0][6]+(5.*pow(x,1.5)*A[i0][7])/2.)+pow(1.-x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(1.+sqrt(
+x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-pow(1.-x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(
+-0.25*A[i0][3]/pow(x,1.5)+(3.*A[i0][5])/(4.*sqrt(x))+2*A[i0][6]+(15.*sqrt(x)*A[i0][7])/4.)+2*pow(1.-x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(A[i0][3]/(2.*sqrt(x))+A[i0][4]+(3.*sqrt(x)*A[i0][5])/2.+2*x*A[i0][6]+(5*pow(x,1.5)*A[i0][7])/2.)-2.*pow(1.-x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*(A[i0][3]/(2.*sqrt(x))+A[i0][4]+(3.*sqrt(x)*
+A[i0][5])/2.+2*x*A[i0][6]+(5.*pow(x,1.5)*A[i0][7])/2.)+pow(1.-x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-2.*pow(1-x,-1+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0]
+[2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+pow(1.-x,-2+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])));
+      break;
+    case 3: return x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+2.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7]))+x*(2.*pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+4.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+2.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+2.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))+3.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+3.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-6.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7]))));
+      break;
+      case 4: return x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-1.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+2.*pow(1.-1.*x,A[i0][2])*
+pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-2.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7]))+x*(2.*pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+
+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+4.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+2.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+
+2.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))+3.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+3.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-6.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*
+pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])))+x*(4.*pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+
+8.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-8.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+4.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-8.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+4.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+
+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+2.*x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))+3.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+3.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-6.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*
+A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-3.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+3.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-1.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+
+pow(x,2.5)*A[i0][7]))+x*(3.*pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))+9.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])-9.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+9.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-18.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+9.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+3.*pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+
+A[i0][1])*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-9.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+9.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-3.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+x*(pow(1.-1.*x,A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*((-0.9375*A[i0][3])/pow(x,3.5)+(0.5625*A[i0][5])/pow(x,2.5)-(0.9375*A[i0][7])/pow(x,1.5))+4.*pow(1.-1.*x,A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*A[i0][2]*((0.375*A[i0][3])/pow(x,2.5)-(0.375*A[i0][5])/pow(x,1.5)+(1.875*A[i0][7])/sqrt(x))+6.*pow(1.-1.*x,A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+
+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])-12.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+6.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-1.+A[i0][2])*A[i0][2]*((-0.25*A[i0][3])/pow(x,1.5)+(0.75*A[i0][5])/sqrt(x)+2.*A[i0][6]+3.75*sqrt(x)*A[i0][7])+4.*pow(1.-1.*x,A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])-12.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+12.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+
+2.5*pow(x,1.5)*A[i0][7])-4.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*((0.5*A[i0][3])/sqrt(x)+A[i0][4]+1.5*sqrt(x)*A[i0][5]+2.*x*A[i0][6]+2.5*pow(x,1.5)*A[i0][7])+pow(1.-1.*x,A[i0][2])*pow(x,-3.+A[i0][1])*A[i0][0]*(-2.+A[i0][1])*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-4.*pow(1.-1.*x,-1.+A[i0][2])*pow(x,-2.+A[i0][1])*A[i0][0]*(-1.+A[i0][1])*A[i0][1]*(1.+A[i0][1])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+6.*pow(1.-1.*x,-2.+A[i0][2])*pow(x,-1.+A[i0][1])*A[i0][0]*A[i0][1]*(1.+A[i0][1])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])-4.*pow(1.-1.*x,-3.+A[i0][2])*pow(x,A[i0][1])*A[i0][0]*(1.+A[i0][1])*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])+pow(1.-1.*x,-4.+A[i0][2])*pow(x,1.+A[i0][1])*A[i0][0]*(-3.+A[i0][2])*(-2.+A[i0][2])*(-1.+A[i0][2])*A[i0][2]*(1.+sqrt(x)*A[i0][3]+x*A[i0][4]+pow(x,1.5)*A[i0][5]+pow(x,2)*A[i0][6]+pow(x,2.5)*A[i0][7])))));
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+void set_pdf_fit(const PDF* F, double &x,vector<double>& q, vector<double>& qbar, double &g, const bool usePDFAnzat, int k, bool num)
+{ 
+  // Quarks PDG list
+  vector<int>  idx_q = usePDFAnzat ? std::vector<int>{8} : std::vector<int>{1, 2, 4, 7, 5};// d , u , s , c , b
+  vector<int>  idx_qb = usePDFAnzat ? std::vector<int>{8} : std::vector<int>{3, 6, 4, 7, 5};// dbar , ubar , sbar , cbar , bbar
+  double (*func)(const double&, int, const PDF* F,const bool, int);
+  if (num)
+    func = F_real;
+  else
+    func = F_real_bis;
+  //PDFs  
+  g = func(x, 0, F,usePDFAnzat, k);
+  for (int j=0; j<Nflav; j++)
+  {
+    qbar.push_back( func(x, idx_qb[j], F,usePDFAnzat, k));  // qbar for b, c, s, u
+    q.push_back( func(x, idx_q[j], F,usePDFAnzat, k));    // q for b, c, s 
+  }
+}
+
+
+
+
+double Luminosity(double &xa, double &xb, const PDF* F,const double &a, const bool usePDFAnzat, bool qq, int k)
+{
+
+  void (*set_pdf)( const PDF* F, double &x, vector<double>& q, vector<double>& qbar, double &g, const bool usePDFAnzat, int k, bool num);
+  if(use_LHAPDF)  set_pdf = set_pdf_LHAPDF;
+  else set_pdf = set_pdf_fit;
+  // Variables for PDFs
+  double fAB = 0.;
+  vector<double> qa_plus, qb_plus, qbara_plus, qbarb_plus;
+  vector<double> qa_minus, qb_minus, qbara_minus, qbarb_minus;
+  double ga, gb;
+  double ha = 2.*Eps*xa;
+  double hb = 2.*Eps*xb;
+
+  // Adjust limits for xa_plus and xb_plus
+  double xa_plus = min(xa*(1.+Eps), 1.0);
+  double xb_plus = min(xb*(1.+Eps), 1.0);
+  double xa_minus = xa*(1.-Eps);
+  double xb_minus = xb*(1.-Eps);
+
+  // Compute PDFs for variations
+  if(false)  // First PDF trick
+  {
+    set_pdf(F, xa_plus, qa_plus, qbara_plus, ga, usePDFAnzat, k, false);   // PDFs with xa+eps
+    set_pdf(F, xa_minus, qa_minus, qbara_minus, ga, usePDFAnzat, k, false); // PDFs with xa-eps
+    set_pdf(F, xb_plus, qb_plus, qbarb_plus, gb, usePDFAnzat, k, false);   // PDFs with xb+eps
+    set_pdf(F, xb_minus, qb_minus, qbarb_minus, gb, usePDFAnzat, k, false); // PDFs with xb-eps
+
+    // Compute contributions to fAB
+    //for (int fl = 0; fl < (usePDFAnzat ? 1 : Nflav); fl++)
+    for (int fl = 0; (fl < (usePDFAnzat ? 1 : Nflav) && fl!=3) ; fl++)
+    {
+      double xa_der = (pow(xa_plus,-a)*qa_plus[fl]    - pow(xa_minus,-a)*qa_minus[fl])/ha;
+      double xb_der = (pow(xb_plus,-a)*qbarb_plus[fl] - pow(xb_minus,-a)*qbarb_minus[fl])/hb;
+      double xa_der_qbar = (pow(xa_plus,-a)*qbara_plus[fl] - pow(xa_minus,-a)*qbara_minus[fl])/ha;
+      double xb_der_q = (pow(xb_plus,-a)*qb_plus[fl]       - pow(xb_minus,-a)*qb_minus[fl])/hb;
+      fAB += (fl%2==0 ? gd : gu)*pow(xa,a)*pow(xb,a)*(xa_der*xb_der+xa_der_qbar*xb_der_q);
+
+      if(usePDFAnzat) fAB = pow(xa,a)*pow(xb,a)*xa_der*xb_der; 
+    }
+  }
+  // Second PDF trick
+    vector<double> qa, qb, qbara, qbarb;
+    bool num=true;
+    set_pdf(F, xa, qa, qbara, ga, usePDFAnzat, k, num);
+    set_pdf(F, xb, qb, qbarb, gb, usePDFAnzat, k, num);
+    // Compute fAB contributions
+    for (int fl = 0; fl < Nflav; ++fl) fAB += (fl%2==0 ? gd : gu)*(qq ? qa[fl]*qbarb[fl] + qb[fl]*qbara[fl] : qa[fl]*gb+qb[fl]*ga+qbara[fl]*gb+qbarb[fl]*ga) ;
+    // Remove charm quark
+    if(remove_charm_quark) fAB-= gu*(qq ? qa[3]*qbarb[3] + qb[3]*qbara[3] : qa[3]*gb+qb[3]*ga+qbara[3]*gb+qbarb[3]*ga);
+
+    //PDF Anzat
+    if(usePDFAnzat) fAB=qa[0]*qbarb[0];
+
+    if (abs(fAB) > 1e10)
+     info("xa = " + to_string(xa)  + "; xb = " + to_string(xb) + "; fAB = " + to_string(fAB));
+  
+  // Output
+    return fAB;
 }

@@ -1,7 +1,7 @@
 import sys
 
 def FixHwU(path):
-    path2="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/FixedOrderAnalysis/"
+    path2="/home/matteo/mg5amcnlo/"+path+"/FixedOrderAnalysis/"
     file = open(path2+"HwU.f", "r")
     replaced_content = ""
     word=" parameter :: wgts_info_len="
@@ -20,7 +20,7 @@ def FixHwU(path):
 
 
 def FixLHEF(path):
-    path3="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/MCatNLO/include/"
+    path3="/home/matteo/mg5amcnlo/"+path+"/MCatNLO/include/"
     file = open(path3+"LHEFRead.h", "r")
     replaced_content = ""
     word="const int wgts_info_len_used ="
@@ -40,7 +40,7 @@ def FixLHEF(path):
     
 
 def FixPythia(path):
-    path4="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/MCatNLO/srcPythia8/"
+    path4="/home/matteo/mg5amcnlo/"+path+"/MCatNLO/srcPythia8/"
     file = open(path4+"Pythia83.cc", "r")
     replaced_content = ""
     word="char(*)[50]"

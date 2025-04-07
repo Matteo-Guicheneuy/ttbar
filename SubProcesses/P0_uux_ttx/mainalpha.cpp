@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	      << "Initial point and final point \n";
     exit(0);
   }	
-
+  std::cout << "///        ALPHA_S TEST        ///"  << std::endl;   
   
   const clock_t begin_time = clock();
   
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
   double Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);
   double sc=s0, M=Mic;
   
-  const std::string & pathstr="/home/yehudi/LHAPDF6/share/LHAPDF";
+  const std::string & pathstr="/home/matteo/LHAPDF/share/LHAPDF";
 
   setPaths(pathstr);
 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
   else if (PDFID==21200) namePDF = "MSTW2008nnlo68cl";
   F=mkPDF(namePDF,0);
 
-  double alpha_0=1e-7;
+  double alpha_0=1e-4;
 
   alpha_s=F->alphasQ(M)*pow(alpha_0/F->alphasQ(M),(double(initstep)+.5)/double(ntot-1));
   M=4000.;

@@ -86,9 +86,10 @@ double TotPhaseSpace(double *x, size_t dim, void *params)
     {
       for(int j=0; j<4; j++) ppar[j+i*4]=ppart[i+j*(npart+2)];
     }
+  ;
 
   // for(int i=0; i<npart+2; i++)
-  //   {
+  //   {]*ppar[1
   //     for(int j=0; j<4; j++) std::cout << " p("<< i << "," << j << ") = "  << ppar[j+i*4] << std::endl;
   //   }
 
@@ -115,6 +116,7 @@ double TotPhaseSpace(double *x, size_t dim, void *params)
     {
       
       ml5_0_sloopmatrix_thres_(ppar,xx,prec_ask,prec_f,ret_code);
+    
 
       res+=std::imag(TracePhase(ppart,chan,M2,xx,x[d])*ColinearPhase(x[d],chan,M2)*MellinPDFPhase(x[d],chan,M2)*GlobalPhase(x[d],sc,M2)*jac);
 
@@ -202,3 +204,5 @@ double TotPhaseSpace(double *x, size_t dim, void *params)
   }
   return res;
 }
+
+

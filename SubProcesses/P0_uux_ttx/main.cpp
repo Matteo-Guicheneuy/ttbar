@@ -20,7 +20,7 @@ using namespace LHAPDF;
 
 // -------- Functions --------------------------------- //
 void Integrate(double&,double&,double&,int&,double&);  // Integration Ronberg
-void IntegrateVegas(double&,double&,double&,double&,int&,double&);  // Integration Vegas
+void IntegrateVegas(double&,double&,double&,double&,int&,double&,int);  // Integration Vegas
 void IntegratePhase(double&,double&,double&,double&,int&,double&);  // Integration Vegas with Phase Space generation
 void pdfFit(double&, double (*)[8], double, double, double); 
 // ---------------------------------------------------- //
@@ -51,18 +51,19 @@ void ConvertToFortran(char* fstring, std::size_t fstring_len, const char* cstrin
 int main(int argc, char* argv[])
 {
   // Checking the arguments
-  if(argc!=4)
+  if(argc!=5 || argc!=2)
   {
     std::cout << "This function requires 3 arguments\n"
 	      << "  - PDF ID (14400=CT18 NLO, 21100=MSTW2008nlo68cl, 3=CT14LL, 4=CTEQ6M)\n"
 	      << "Initial point and final point \n";
-    exit(0);
+    //exit(0);
   }	
+  bool parallelize = true;
 
-    
   const clock_t begin_time = clock();
   
   std::ofstream TestdM;
+  std::ofstream BorndM;
   std::ofstream DiffdM;
   std::ofstream ExpanddM;
   std::ofstream ResumdM;
@@ -70,27 +71,13 @@ int main(int argc, char* argv[])
   //const int ntot=201;
   const int ntot=31;
    
-  double s0=7000.;
+  double s0=13000.;
   //double s0=13000.;
 
   double Mi=2.*Mt;
-  double Mf=500.;
+  double Mf=1000.;
   //double Mf=4000.+2.*Mt;
   double xi=1e-10, xf=1.;
-  
-  int Ncores, CurrentCore;
-  std::istringstream ncores(argv[3]); 
-  std::istringstream currentCore(argv[2]);
-  ncores >> Ncores;
-  currentCore >> CurrentCore;
-
-  //int nstep[Ncores]={1,1,1,1,1,1,1,1,1,1};
-  int nstep[Ncores]={3,3,3,3,3,3,3,3,3,3};
-  //int nstep[Ncores]={5,5,5,5,5,5,5,5,5,5};
-  //int nstep[Ncores]={10,10,10,10,10,10,10,10,10,10};
-  //int nstep[Ncores]={20,20,20,20,20,20,20,20,20,20};
-  //int nstep[Ncores]={25,25,25,25,25,25,25,25,25,25};
-
   
   std::string name1("param_card.dat");
   std::string name2("../MadLoop5_resources");
@@ -98,7 +85,6 @@ int main(int argc, char* argv[])
   const size_t length2 = name2.length()+1;
   char cpp_string[length], stri[length];
   char cpp_string2[length2], stri2[length2];
-  
   strcpy(cpp_string, name1.c_str());
   strcpy(cpp_string2, name2.c_str());
   ConvertToFortran(stri, sizeof stri, cpp_string);
@@ -106,23 +92,37 @@ int main(int argc, char* argv[])
 
   setpara_(stri);
   std::cout << " MadLoop parameter passed " << std::endl;
-		  
-		    
-  const int nsteps=nstep[CurrentCore-1];
-  int initstep=0;
-  for(int k=1; k<CurrentCore; k++)
-    {
-      initstep+=nstep[k-1];
-    }
+
 
   //double xic= xi + (xf-xi)*double(initstep)/double(ntot-1)+(xf-xi)*0.5/double(ntot-1);
-  double Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);// mass invariant
+  double Mic=Mf; // mass invariant
+  int nsteps=1;
+  if(parallelize){
+    int Ncores, CurrentCore;
+    std::istringstream ncores(argv[3]); 
+    std::istringstream currentCore(argv[2]);
+    ncores >> Ncores;
+    currentCore >> CurrentCore;
+
+    //int nstep[Ncores]={1,1,1,1,1,1,1,1,1,1};
+    int nstep[Ncores]={3,3,3,3,3,3,3,3,3,3};
+    //int nstep[Ncores]={5,5,5,5,5,5,5,5,5,5};
+    //int nstep[Ncores]={10,10,10,10,10,10,10,10,10,10};
+    //int nstep[Ncores]={20,20,20,20,20,20,20,20,20,20};
+    //int nstep[Ncores]={25,25,25,25,25,25,25,25,25,25};
+
+    int nsteps=nstep[CurrentCore-1];
+    int initstep=0;
+    for(int k=1; k<CurrentCore; k++)
+      {
+        initstep+=nstep[k-1];
+      }
+    Mic= Mi + (Mf-Mi)*double(initstep)/double(ntot-1)+(Mf-Mi)*0.5/double(ntot-1);
+  }
   double sc=s0, ML=Mic;
   
   const std::string & pathstr="/home/matteo/LHAPDF/share/LHAPDF";
   setPaths(pathstr);
-  
-  
   int melo=0;
   string name, tag;
   const PDF* F;  
@@ -133,22 +133,26 @@ int main(int argc, char* argv[])
   else if (PDFID==21100) namePDF = "MSTW2008nlo68cl";
   else if (PDFID==21200) namePDF = "MSTW2008nnlo68cl";
   F=mkPDF(namePDF,0);
-  
+
   if(chan==0) tag="qqb";
   else if(chan==1) tag="gg";
+
+  TestdM.open("TestdM_"+tag+".txt");
   DiffdM.open("DiffdM_"+tag+".txt");
-  TestdM.open("BorndM_"+tag+".txt");
+  BorndM.open("BorndM_"+tag+".txt");
   ExpanddM.open("ExpanddM_"+tag+".txt");
   ResumdM.open("ResumdM_"+tag+".txt");
-  
+
+  // Second point varaition incertitude 
+  bool incertitude= false;
   int ji=0;
-  for(int ic=0; ic < nsteps; ic++) 
-    {
+  for(int ic=0; ic < (parallelize ? nsteps : 1); ic++) 
+    { 
       double M2=ML*ML;
       double s=sc*sc;
 
       //for(int mu1=0; mu1< 1; mu1++)
-      for(int mu1=-1; mu1< 2; mu1++)// variation point muf
+      for(int mu1= (incertitude ? -1 : 0); mu1<= (incertitude ? 1 : 0); mu1++)// variation point muf
 	{
 	  muF=ML*pow(2.,mu1)/2.;
     //momentum fraction limite
@@ -158,7 +162,7 @@ int main(int argc, char* argv[])
 	  //Doing the fit, carefull: only valid for CT18NLO (hard coded in src/pdfN.cpp)
 	  pdfFit(A1min,A,-1.6,-1.6,-1.6); //Mandatory for each muF=M if dynamic scale
 	  
-	  for(int mu2=-1; mu2< 2; mu2++)// variation point mur
+	  for(int mu2= (incertitude ? -1 : 0); mu2<= (incertitude ? 1 : 0); mu2++)// variation point mur
 	    {
 	      //if(mu1==0 and mu2==0)
 	      if(mu1*mu2>=0)// exclusion in variation point
@@ -169,33 +173,42 @@ int main(int argc, char* argv[])
 		  int mel=0;//Born
 		  double res=0., err=0., chi=0.;
 		  //Integrate(res,err,s,mel,M2);
-		  //IntegrateVegas(res,err,chi,s,mel,M2);
-		  IntegratePhase(res,err,chi,s,mel,M2);
+		  IntegrateVegas(res,err,chi,s,mel,M2,2);
+		  //IntegratePhase(res,err,chi,s,mel,M2);
+		  std::cout << "Born done " << std::endl;
+		  // Writing in output file
+		  BorndM << res << ",";
+		  
+      mel=4;//Born
+		  double resbis=0., errbis=0., chibis=0.;
+		  //Integrate(res,err,s,mel,M2);
+		  IntegrateVegas(res,err,chi,s,mel,M2,4);
+		  //IntegratePhase(res,err,chi,s,mel,M2);
 		  std::cout << "Born done " << std::endl;
 		  // Writing in output file
 		  TestdM << res << ",";
-		  
-		  mel=1;
+
+		  mel=1;// Resummed - Expanded
 		  double resD=0., errD=0.,chiD=0.;
 		  //Integrate(resD,errD,s,mel,M2);
-		  //IntegrateVegas(resD,errD,chiD,s,mel,M2);
-		  IntegratePhase(resD,errD,chiD,s,mel,M2);
+		  //IntegrateVegas(resD,errD,chiD,s,mel,M2,2);
+		  //IntegratePhase(resD,errD,chiD,s,mel,M2);
 		  std::cout << "Diff done " << std::endl;
 		  // Writing in output file
 		  DiffdM << resD << ",";
 		  
-		  mel=2;
+		  mel=2;// Resummed
 		  double res0=0., err0=0., chi0=0.;
 		  //mel=1; //Careful, test
 		  //Integrate(res0,err0,s,mel,M2);
-		  //IntegrateVegas(res0,err0,chi0,s,mel,M2);
+		  //IntegrateVegas(res0,err0,chi0,s,mel,M2,2);
 		  //IntegratePhase(res0,err0,chi0,s,mel,M2);
 		  std::cout << "Resummed done " << std::endl;
 		  // Writing in output file
 		  ResumdM << res0 << ",";
 		  
 
-		  mel=3;
+		  mel=3;// Expanded
 		  double resfit=0., errfit=0., chifit=0.;
 		  //Integrate(resfit,errfit,s,mel,M2);
 		  //IntegrateVegas(resfit,errfit,chifit,s,mel,M2);
@@ -207,6 +220,8 @@ int main(int argc, char* argv[])
 		  std::cout << " Step n ° " << ji+1 << " over " << 7*nsteps << std::endl;
 		  std::cout << " Duration : " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 		  ji+=1;
+      std::cout << "ML= " << ML << ", mur= " << muR << ", muf= " << muF << std::endl;
+      std::cout << "Born= " << res << ", Diff= " << resD << std::endl;
 		  
 		}
 	    }
@@ -214,6 +229,7 @@ int main(int argc, char* argv[])
 
       DiffdM << M2 << std::endl;
       TestdM << M2 << std::endl;
+      BorndM << M2 << std::endl;
       ResumdM << M2 << std::endl;
       ExpanddM << M2 << std::endl;
       
@@ -223,6 +239,7 @@ int main(int argc, char* argv[])
       ML+=(Mf-Mi)/double(ntot-1);
     }
 
+  BorndM.close();
   TestdM.close();
   DiffdM.close();
   ExpanddM.close();

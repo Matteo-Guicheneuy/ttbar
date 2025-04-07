@@ -12,8 +12,9 @@ do
     cat ResumdM_qqb.txt >> ../Results/ResumdM.txt
     cat BorndM_qqb.txt >> ../Results/BorndM.txt
     cat DiffdM_qqb.txt >> ../Results/DiffdM.txt
-    # cat BorndM_qqb.txt >> ../Results/Born_alpha.txt
-    # cat Diff_qqb.txt >> ../Results/Diff_alpha.txt
+    ## AlphaS Descent Test ##
+    #cat BorndM_qqb.txt >> ../Results/Born_alpha.txt
+    #cat Diff_qqb.txt >> ../Results/Diff_alpha.txt
     
     
     cd ..

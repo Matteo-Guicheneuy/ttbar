@@ -1,23 +1,23 @@
  MadLoop parameter passed 
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
+ alpha_s main = 0.079416
   ========================================================================================== 
  {                                                                                          }
  {       [32m                                                                            [0m       }
@@ -75,265 +75,33 @@ Born done
 |              You are using CutTools - Version 1.9.3                  |
 |              Authors: G. Ossola, C. Papadopoulos, R. Pittau          |
 |              Published in JHEP 0803:042,2008                         |
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 1 over 21
- Duration : 78.2205
+ Diff done 
 Born done 
-Diff done 
-Resummed done 
 Expanded done 
- Step n ° 2 over 21
- Duration : 149.365
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+ Step n ° 1 over 2
+ Duration : 120.712
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
+LHAPDF 6.4.0 loading /home/matteo/LHAPDF/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
 MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
+ alpha_s main = 0.0563395
+ Diff done 
 Born done 
-Diff done 
-Resummed done 
 Expanded done 
- Step n ° 3 over 21
- Duration : 224.349
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 4 over 21
- Duration : 293.331
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 5 over 21
- Duration : 366.689
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 6 over 21
- Duration : 450.276
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 7 over 21
- Duration : 524.374
- Step N ° 1 over 3
- Duration : 524.374
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 8 over 21
- Duration : 603.858
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 9 over 21
- Duration : 678.355
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 10 over 21
- Duration : 758.254
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 11 over 21
- Duration : 832.598
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 12 over 21
- Duration : 906.953
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 13 over 21
- Duration : 990.927
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 14 over 21
- Duration : 1065.09
- Step N ° 2 over 3
- Duration : 1065.09
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 15 over 21
- Duration : 1144.89
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 16 over 21
- Duration : 1219.26
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 17 over 21
- Duration : 1299.35
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 18 over 21
- Duration : 1373.07
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 19 over 21
- Duration : 1447.14
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-LHAPDF 6.4.0 loading /home/yehudi/LHAPDF6/share/LHAPDF/MSTW2008nnlo68cl/MSTW2008nnlo68cl_0000.dat
-MSTW2008nnlo68cl PDF set, member #0, version 3; LHAPDF ID = 21200
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 20 over 21
- Duration : 1531.1
-Born done 
-Diff done 
-Resummed done 
-Expanded done 
- Step n ° 21 over 21
- Duration : 1605.15
- Step N ° 3 over 3
- Duration : 1605.15
+ Step n ° 2 over 2
+ Duration : 216.964
 Thanks for using LHAPDF 6.4.0. Please make sure to cite the paper:
   Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
 |              http://www.ugr.es/~pittau/CutTools                      |

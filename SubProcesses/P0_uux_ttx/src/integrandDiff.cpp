@@ -14,25 +14,21 @@
 #include <gsl/gsl_complex.h>
 // -------- Classes ----------------------------------- //
 #include "process.h"	// Process//
+#include "setting.h"
+#include "main.h"
+#include "SoftFunctions.h"
 // -------- Functions --------------------------------- //
-void EigenvGlobal(double*,double,int,std::complex<double>**,std::complex<double>**,std::complex<double>**,std::complex<double>**,std::complex<double>*,int);
 double Sqrt(double);
 std::complex<double> Psi(std::complex<double>);
 std::complex<double> Gamma(const std::complex<double>);
 std::complex<double> B(std::complex<double>&,double,double);
-void SetPDFN(std::complex<double>&,std::complex<double>*,std::complex<double>*,std::complex<double>&,double (*)[8]);
 double Ci(int);
 double B1(int);
 std::complex<double> N(double);
 double Xcos(double);
 double Xsin(double);
 std::complex<double> GammGlobal(double*, int, int, int, double, int);
-double H0(double*,int,int,int,double);
-double S0(int,int,int);
-std::complex<double> S1(double*,int,int,int,double,int);
-std::complex<double> S1mu(double*,int,int,int,double,int);
-std::complex<double> S1t(double*,int,int,int,double,int);
-std::complex<double> SG(double*,int,int,int,double,int);
+double H0(std::complex<double>, double ,int,int,int,double);
 void pdfFit(double&, double (*)[8], double, double, double);
 
 extern "C"{
@@ -44,8 +40,10 @@ extern "C"{
 extern double MZ, Mt, alpha_s, muF, muR, beta0, beta1, CF, C, Phi, xmax, xmin;
 extern double A[8][8], A1min;
 extern int Nc, Nf, chan;
+extern string namePDF;
 
-std::complex<double> TraceBornDiff(double *x, int chan, double M2)
+
+std::complex<double> TraceBornDiff(std::complex<double > N, double Xbet,int chan, double M2)
 {
   // chan is channel index, 0 for qqbar and 1 for gluon gluon
   const int Len=chan+2;
@@ -55,25 +53,25 @@ std::complex<double> TraceBornDiff(double *x, int chan, double M2)
      {
        for(int ji=0; ji < Len; ji++)
 	 {
-	   res+=S0(ka,ji,chan)*H0(x,ji,ka,chan,M2);
+	   res+=S0(ka,ji,chan)*H0(N,Xbet,ji,ka,chan,M2);
 	 }
      }  
   return res;
 }
 
-std::complex<double> TraceHSDiff(double *x, int chan, double M2, complex<double> *xx, int tu)
+std::complex<double> TraceHSDiff(std::complex<double > N,double Xbet ,int chan, double M2, complex<double> *xx, int tu)
 {
   // chan is channel index, 0 for qqbar and 1 for gluon gluon
   const int Len=chan+2;
   std::complex<double> res=1.;
   std::complex<double> **R, **Rm, **Rdag, **Rdagm1, *Lamb;
-  std::complex<double> Ht[Len][Len]={0}, i(0.0,1.0);
+  std::complex<double> H0t[Len][Len]={0}, i(0.0,1.0);
 
   std::complex<double> Nb, DeltaProc;
   std::complex<double> St[Len][Len]={0};
   std::complex<double> S0t[Len][Len]={0};
   std::complex<double> H1t[Len][Len]={0};
-
+  // Def of matrices for the diagonalisation of the Sudakov anomalous dimension matrix
   R=new std::complex<double> *[Len];
   Rm=new std::complex<double> *[Len];
   Rdag=new std::complex<double> *[Len];
@@ -88,44 +86,46 @@ std::complex<double> TraceHSDiff(double *x, int chan, double M2, complex<double>
       Rdagm1[h]=new std::complex<double>[Len];
     }
   
-  EigenvGlobal(x,M2,chan,Rdag,Rdagm1,R,Rm,Lamb,tu); // Computes rotation matrices and eigenvalues from soft anomalous dimension matrix
-  Nb=N(x[0])*exp(-Psi(1.));
+  EigenvGlobal(N,Xbet,M2,chan,Rdag,Rdagm1,R,Rm,Lamb,tu); // Computes rotation matrices and eigenvalues from soft anomalous dimension matrix
+  Nb=N*exp(-Psi(1.));
   
   double alpha_p=0.118;
   
-  for(int k=0; k < Len; k++)
-    {
-      for(int l=0; l < Len; l++)
-	{
-	  for(int mm=0; mm < Len; mm++)
-	    {
-	      for(int nn=0; nn < Len; nn++)
-		{
-		  H1t[k][l]+=R[k][mm]*xx[1+nn*4+mm*Len*4]*pow(alpha_s/alpha_p,3)/2./M2*Rdag[nn][l];
-		  Ht[k][l]+=R[k][mm]*H0(x,mm,nn,chan,M2)*Rdag[nn][l];
-		  
-		  S0t[k][l]+=Rdagm1[k][mm]*S0(mm,nn,chan)*Rm[nn][l];
-		  St[k][l]+=Rdagm1[k][mm]*(S0(mm,nn,chan)+S1t(x,mm,nn,chan,M2,tu))*Rm[nn][l];
+  for(int k=0; k < Len; k++){
+    for(int l=0; l < Len; l++){
+      // Hard and Soft functions
+	    for(int mm=0; mm < Len; mm++){
+          for(int nn=0; nn < Len; nn++){
+            // Firt Order Hard function
+		        H0t[k][l]+=R[k][mm]*H0(N,Xbet,mm,nn,chan,M2)*Rdag[nn][l];
+            // Second Order Hard function
+		        H1t[k][l]+=R[k][mm]*xx[1+nn*4+mm*Len*4]*pow(alpha_s/alpha_p,3)/2./M2*Rdag[nn][l];
 
-		}
-	    }
-	  //DeltaProc=exp(-(Lamb[l]+std::conj(Lamb[k]))/2./beta0*log(1.-alpha_s/M_PI*beta0*log(Nb))); //HS convention
-	  DeltaProc=exp((Lamb[l]+std::conj(Lamb[k]))/2./beta0*log(1.-alpha_s/M_PI*beta0*log(Nb))); //Me convention
-
-	  St[k][l]*=DeltaProc;
-	  S0t[k][l]*=DeltaProc;
-	}
-    }
+            // Firt Order Soft function
+		        S0t[k][l]+=Rdagm1[k][mm]*S0(mm,nn,chan)*Rm[nn][l];
+            // First + Second Order Soft function
+		        St[k][l]+=Rdagm1[k][mm]*(S0(mm,nn,chan)+S1t(N,Xbet,mm,nn,chan,M2,tu))*Rm[nn][l];
+          }
+	      }
+      // Exp of Soft anomalous dimension matrix: exp(ln(1-2lambda)/beta0*Gamma_S):
+	    //DeltaProc=exp(-(Lamb[l]+std::conj(Lamb[k]))/2./beta0*log(1.-alpha_s/M_PI*beta0*log(Nb))); //HS convention
+	    DeltaProc=exp((Lamb[l]+std::conj(Lamb[k]))/2./beta0*log(1.-alpha_s/M_PI*beta0*log(Nb))); //Me convention
+      
+      //Product with the Soft function
+	    St[k][l]*=DeltaProc;
+	    S0t[k][l]*=DeltaProc;
+	  }
+  }
   
-  res=0.; // Compute the trace of Hard and Soft
-   for(int ka=0; ka < Len; ka++)
-     {
-       for(int ji=0; ji < Len; ji++)
-	 {
-	   res+=St[ka][ji]*Ht[ji][ka];
-	   res+=S0t[ka][ji]*H1t[ji][ka];
-	 }
-     }
+  res=0.; 
+  // Compute the trace of Hard and Soft
+   for(int ka=0; ka < Len; ka++){
+       for(int ji=0; ji < Len; ji++){
+        // Porduct with the Hard function and Trace
+	      res+=St[ka][ji]*H0t[ji][ka];
+	      res+=S0t[ka][ji]*H1t[ji][ka];// the missing term at second order 
+	      }
+      }
     // kill pointeur
    for (int i=0; i<Len; i++)
      {
@@ -151,7 +151,7 @@ std::complex<double> TraceHSDiff(double *x, int chan, double M2, complex<double>
  
 }
 
-std::complex<double> TraceHSExpDiff(double *x, int chan, double M2, complex<double> *xx, int tu)
+std::complex<double> TraceHSExpDiff(std::complex<double > N, double Xbet ,int chan, double M2, complex<double> *xx, int tu)
 {
   // chan is channel index, 0 for qqbar and 1 for gluon gluon
   const int Len=chan+2;
@@ -160,14 +160,12 @@ std::complex<double> TraceHSExpDiff(double *x, int chan, double M2, complex<doub
   std::complex<double> res=1.;
 
   res=0.; // Compute the trace of Hard and Soft
-  for(int ka=0; ka < Len; ka++)
-     {
-       for(int ji=0; ji < Len; ji++)
-	 {
-	   res+=(S1t(x,ka,ji,chan,M2,tu)+SG(x,ka,ji,chan,M2,tu))*H0(x,ji,ka,chan,M2);
-	   res+=S0(ka,ji,chan)*xx[1+ka*4+ji*Len*4]*pow(alpha_s/alpha_p,3)/2./M2; //Virtual contribution
-	 }
-     }
+  for(int ka=0; ka < Len; ka++){
+       for(int ji=0; ji < Len; ji++){
+	        res+=(S1t(N,Xbet,ka,ji,chan,M2,tu)+SG(N,Xbet,ka,ji,chan,M2,tu))*H0(N,Xbet,ji,ka,chan,M2);
+	        res+=S0(ka,ji,chan)*xx[1+ka*4+ji*Len*4]*pow(alpha_s/alpha_p,3)/2./M2; //Virtual contribution
+	      }
+    }
 
   if(isfinite(abs(res))==0){
     std::cout << "!! Result non finite in Tr expanded !!" << std::endl;
@@ -178,20 +176,20 @@ std::complex<double> TraceHSExpDiff(double *x, int chan, double M2, complex<doub
 }
 
 // *************************************************** //
-// Soft colinear radiations //
+// Soft colinear radiation(x[0])s //
 // *************************************************** //
 
-std::complex<double> ColinearDiff(double *x, int chan, double M2) 
+std::complex<double> ColinearDiff(std::complex<double > N, int chan, double M2) 
 {
   // chan is channel index, 0 for qqbar and 1 for gluon gluon
   std::complex<double> i(0.0,1.0), Nb=0, G=0, g1=0, g2=0;
   double Q=pow(M2,0.5);
   //Change of variable
-  Nb=N(x[0])*exp(-Psi(1.));
+  Nb=N*exp(-Psi(1.));
 
   std::complex<double> lambdN=alpha_s/2./M_PI*beta0*log(Nb);
   // g1, g2 and corresponding G functions of the N variable, independant of the correction considered (global) cf. Nucl. Phys. B. 529 (1998) Bociani, Catani, Mangano, Nason or 1005.2909 Debove, Fuks, Klasen or 0805.1885 
-
+  // See HuaSheng note, thes are the non colinear imporve version
   g1=Ci(chan)/beta0/lambdN*(2.*lambdN+(1.-2.*lambdN)*log(1.-2.*lambdN));
   
   g2=Ci(chan)/beta0*log(1.-2.*lambdN)*2.*log(Q/muR);
@@ -212,16 +210,17 @@ std::complex<double> ColinearDiff(double *x, int chan, double M2)
   return G;
 }
 
-std::complex<double> ColinearExpDiff(double *x, int chan, double M2) 
+std::complex<double> ColinearExpDiff(std::complex<double > N, int chan, double M2) 
 {
   // chan is channel index, 0 for qqbar and 1 for gluon gluon
   std::complex<double> i(0.0,1.0), Nb=0, G=0, g1=0, g2=0;
   double Q=pow(M2,0.5);
   
   // Change of variable
-  Nb=(N(x[0]))*exp(-Psi(1.));
+  Nb=N*exp(-Psi(1.));
   
   std::complex<double> lambdN=alpha_s/2./M_PI*beta0*log(Nb);
+  // def of the sudakow factor in which we only keep the first order
   g1=2.*Ci(chan)*lambdN/beta0;
   
   g2=-2.*Ci(chan)/beta0*lambdN*2.*log(Q/muR);
@@ -232,7 +231,7 @@ std::complex<double> ColinearExpDiff(double *x, int chan, double M2)
   
   g1*=2.;
   g2*=2.;
-  
+  // G expension
   G=1.+g1*log(Nb)+g2;
   
   if(isfinite(abs(G))==0){
@@ -243,12 +242,12 @@ std::complex<double> ColinearExpDiff(double *x, int chan, double M2)
   return G-1.;
 }
 
-std::complex<double> MellinPDFDiff(double *x, int chan, double M2) // Resummed formula, the numericall integration does the inversed Mellin transform           
+std::complex<double> MellinPDFDiff(std::complex<double > N, int chan, double M2) // Resummed formula, the numericall integration does the inversed Mellin transform           
 {
   std::complex<double> i(0.0,1.0), fAB=0, res=0;
 
   std::complex<double> q[5], g, qbar[5], Npdf;
-  Npdf=N(x[0]);
+  Npdf=N;
   SetPDFN(Npdf,q,qbar,g,A); // PDFs with N
 
 
@@ -266,6 +265,7 @@ std::complex<double> MellinPDFDiff(double *x, int chan, double M2) // Resummed f
   res=fAB;
   return res;
 }
+
 
 
 std::complex<double> GlobalDiff(double *x, double sc, double M2) // Resummed formula, the numericall integration does the inversed Mellin transform
@@ -290,6 +290,17 @@ std::complex<double> GlobalDiff(double *x, double sc, double M2) // Resummed for
 
   return res;
 }
+// *************************************************** //
+// PDF Trick //
+// *************************************************** //
+double xPDFDiff(double *x , int chan, double sc, double M2, int k) // Resummed formula, the numericall integration does the inversed Mellin transform           
+{
+  double fAB=0., tau=M2/sc, a=-1.;
+  double xa=tau/pow(tau,x[3]), xb=tau/pow(tau/xa,x[4])/xa;
+  PDF* F=mkPDF(namePDF,0);
+  fAB=Luminosity(xa, xb, F,a, usePDFAnzat, true, k);
+  return fAB;
+}
 
 //------------------------------------------------------------//
 //--------------------Total Integrand-------------------------//
@@ -301,12 +312,13 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
   
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
   Xbet=Xcos(x[1])*bet;
+  std::complex<double> n=N(x[0]);
 
   if(mel==0)
     {
       std::complex<double> tmp=0.;
-      tmp=TraceBornDiff(x,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
-      res+=std::imag(tmp*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
+      res+=std::imag(tmp*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
   else if(mel==1) //Diff and NLL
@@ -337,9 +349,13 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       ppart[3][3]=-pow(M2,0.5)/2.*Xbet;
       
       ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
+      //xx[ 0 + nn*4+mm*4*Len ] est l'élément (nn,mm) de la matrice H0
+      //xx[ 1 + nn*4+mm*4*Len ] est l'élément (nn,mm) de la matrice H1
+      //xx[ 2 + nn*4+mm*4*Len ] est l'élément (nn,mm) de la matrice V-2 (poles en 1/eps^2 qui vient du calcul après renormalisation -> divergence IR à compenser avec les PDF)
+      //xx[ 3 + nn*4+mm*4*Len ] est l'élément (nn,mm) de la matrice V-1 (poles en 1/eps qui vient du calcul après renormalisation -> divergence IR à compenser avec les PDF)
 
-      res+=std::imag(TraceHSDiff(x,chan,M2,xx,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
-      res-=std::imag((TraceHSExpDiff(x,chan,M2,xx,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
+      res-=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
 
       // symetry case u ubar and ubar u
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -350,8 +366,8 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
 
       tu=1;
-      res+=std::imag(TraceHSDiff(x,chan,M2,xx2,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
-      res-=std::imag((TraceHSExpDiff(x,chan,M2,xx2,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx2,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
+      res-=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
     }
 
@@ -382,7 +398,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       
       ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
-      res=std::imag(TraceHSDiff(x,chan,M2,xx,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
 
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -392,7 +408,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
 
       tu=1;
-      res+=std::imag(TraceHSDiff(x,chan,M2,xx2,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx2,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
     else if(mel==3) //Exp                                                                      
@@ -422,7 +438,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       
       ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
-      res=std::imag((TraceHSExpDiff(x,chan,M2,xx,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -432,9 +448,15 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
       ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
 
       tu=1;
-      res+=std::imag((TraceHSExpDiff(x,chan,M2,xx2,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
-  
+    else if(mel==4)
+    {
+      std::complex<double> tmp=0.;
+      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
+      res+=imag(tmp*xPDFDiff(x,chan,sc,M2,2)*GlobalDiff(x,sc,M2));
+    }
+
   if(isfinite(res)==0){
     std::cout << "!! Result non finite !!" << std::endl;
     exit(1);

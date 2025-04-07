@@ -13,19 +13,13 @@
 #include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_complex.h>
 // -------- Classes ----------------------------------- //
-#include "process.h"	// Process//
+#include "process.h"	// Process                        //
+#include "integrandDiff.h"
 // -------- Functions --------------------------------- //
 std::complex<double> N(double);
 std::complex<double> Psi(std::complex<double>);
 double Xcos(double);
 double Xsin(double);
-std::complex<double> MellinPDFDiff(double*,int,double);
-std::complex<double> GlobalDiff(double*,double,double);
-std::complex<double> TraceHSDiff(double*,int,double,complex<double>*,int);
-std::complex<double> TraceBornDiff(double*,int,double);
-std::complex<double> TraceHSExpDiff(double *, int , double , complex<double> *,int);
-std::complex<double> ColinearDiff(double *, int , double );
-std::complex<double> ColinearExpDiff(double *, int , double);
 
 struct my_f_params { double sc; int mel; double M2; };  
 
@@ -44,13 +38,13 @@ extern int chan;
 double TotVegas(double *x, size_t dim, void *params)
 {
   double res=0., bet, t, hgg,  u, Xbet;
-  std::complex<double> temp=0, i(0.0,1.0), Nb;
+  std::complex<double> temp=0, i(0.0,1.0), n, Nb;
   
   struct my_f_params * fparams = (struct my_f_params *)params;  
   double M2=fparams->M2, sc=fparams->sc;
   int mel=fparams->mel;
-  
-  Nb=N(x[0])*exp(-Psi(1.));
+  n=N(x[0]);
+  Nb=n*exp(-Psi(1.));
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
   Xbet=Xcos(x[1])*bet;
   //t=-M2/2.*(1-Xbet);
@@ -58,8 +52,8 @@ double TotVegas(double *x, size_t dim, void *params)
   if(mel==0)
     {
       std::complex<double> tmp=0.;      
-      tmp=TraceBornDiff(x,chan,M2)*2.;
-      res=std::imag(tmp*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.;
+      res=std::imag(tmp*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
   else if(mel==1) //Diff
@@ -90,9 +84,9 @@ double TotVegas(double *x, size_t dim, void *params)
       
       ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
-      res=std::imag(TraceHSDiff(x,chan,M2,xx,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
 
-      res-=std::imag((TraceHSExpDiff(x,chan,M2,xx,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res-=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -102,9 +96,9 @@ double TotVegas(double *x, size_t dim, void *params)
       ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
 
       tu=1;
-      res+=std::imag(TraceHSDiff(x,chan,M2,xx2,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx2,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
 
-      res-=std::imag((TraceHSExpDiff(x,chan,M2,xx2,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res-=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
     else if(mel==2) //NLL 
@@ -134,7 +128,7 @@ double TotVegas(double *x, size_t dim, void *params)
       
       //ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
-      res=std::imag(TraceHSDiff(x,chan,M2,xx,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -144,7 +138,7 @@ double TotVegas(double *x, size_t dim, void *params)
       //ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
       tu=1;
       
-      res+=std::imag(TraceHSDiff(x,chan,M2,xx2,tu)*ColinearDiff(x,chan,M2)*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx2,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
     }
 
@@ -175,7 +169,7 @@ double TotVegas(double *x, size_t dim, void *params)
       
       //ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
-      res=std::imag((TraceHSExpDiff(x,chan,M2,xx,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
 
       ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
       ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
@@ -185,7 +179,7 @@ double TotVegas(double *x, size_t dim, void *params)
       //ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
       tu=1;
       
-      res+=std::imag((TraceHSExpDiff(x,chan,M2,xx2,tu)+(1.+ColinearExpDiff(x,chan,M2))*TraceBornDiff(x,chan,M2))*MellinPDFDiff(x,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
   

@@ -25,7 +25,7 @@ double Ci(int);
 std::complex<double> N(double);
 std::complex<double> Psi(std::complex<double>);
 
-std::complex<double> GammGlobal(double *x, int m, int n, int chan, double M2, int tu)
+std::complex<double> GammGlobal(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu)
 {
   // Gamma not symmetric, only complex in diagonal
   
@@ -33,11 +33,10 @@ std::complex<double> GammGlobal(double *x, int m, int n, int chan, double M2, in
   const int Len=chan+2;
   std::complex<double> i(0.0,1.0), Lbet=0;
   double Logb=0.;
-  double Xbet=0, bet=0.;
+  double bet=0.;
 
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
   Lbet=(1.+bet*bet)/2./bet*(log((1.-bet)/(1.+bet))+i*M_PI);
-  Xbet=Xcos(x[1])*bet;
   if(tu==1) Xbet*=-1.; // Forward/backward asymetry qb <-> q
   
   Logb=log((1.-Xbet)/(1.+Xbet));
@@ -113,7 +112,7 @@ std::complex<double> GammPhase(double *ppart, int m, int n, int chan, double M2)
 }
 
 
-void EigenvGlobal(double *x, double M2, int chan, std::complex<double> **Rdag, std::complex<double> **Rmdag, std::complex<double> **R, std::complex<double> **Rm, std::complex<double> *Lamb, int tu)
+void EigenvGlobal(std::complex<double> N, double Xbet, double M2, int chan, std::complex<double> **Rdag, std::complex<double> **Rmdag, std::complex<double> **R, std::complex<double> **Rm, std::complex<double> *Lamb, int tu)
 {
   const int Len=chan+2;
   Eigen::MatrixXcf Ag(Len,Len);
@@ -121,7 +120,7 @@ void EigenvGlobal(double *x, double M2, int chan, std::complex<double> **Rdag, s
     {
       for(int j=0; j < Len; j++)
 	{
-	  Ag(m,j)=GammGlobal(x,m,j,chan,M2,tu);
+	  Ag(m,j)=GammGlobal(N,Xbet,m,j,chan,M2,tu);
 	}
     }
   
@@ -175,24 +174,19 @@ double S0(int m, int n, int chan)
 {
   double res=0.;
 
-  if(m==n)
-    {
-      if(chan==0)
-	{
+  if(m==n){
+    if(chan==0){
 	  //Color basis = {delta_(q,qx)*delta_(t,tx),T^i_(qb,q)*T^i_(t,tx)}
-	  if(n==0) res= double(Nc)*double(Nc);
-	  else if(n==1) res=CF/2.*double(Nc);
-	}
-    
-
-      else if (chan==1)
-	{
+	    if(n==0) res= double(Nc)*double(Nc);
+	    else if(n==1) res=CF/2.*double(Nc);
+	  }
+    else if (chan==1){
 	  //Color basis = {delta^(g1,g2)*delta_(t,tx),i*f^(g1,g2,i)*T^i_(t,tx),d^(g1,g2,i)*T^i_(t,tx)}
-	  if(n==0) res= double(Nc)*(pow(double(Nc),2)-1.);
-	  else if(n==1) res=double(Nc)*(pow(double(Nc),2)-1.)/2.;
-	  else if(n==2) res=double(pow(Nc,2)-1)*(double(Nc*Nc)-4.)/2./double(Nc);
-	}
-    }
+	    if(n==0) res= double(Nc)*(pow(double(Nc),2)-1.);
+	    else if(n==1) res=double(Nc)*(pow(double(Nc),2)-1.)/2.;
+	    else if(n==2) res=double(pow(Nc,2)-1)*(double(Nc*Nc)-4.)/2./double(Nc);
+	  }
+  }
   
   return res;
 }
@@ -225,14 +219,14 @@ double Beam(int chan,double M2)
   return res*alpha_s/4./M_PI*log(muF/muR)*2.; //*2 for mu^2
 }
 
-double Gamma_sNindep(double *x,int m, int n, int chan, double M2, int tu)
+double Gamma_sNindep(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu)
 {
   double res=0.,bet=0.,t=0.;
   int Len=chan+2;
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
   for(int k=0; k < Len; k++)
     {
-      res+=std::real(S0(m,k,chan)*GammGlobal(x,k,n,chan,M2,tu)+std::conj(GammGlobal(x,k,m,chan,M2,tu))*S0(k,n,chan));
+      res+=std::real(S0(m,k,chan)*GammGlobal(N,Xbet,k,n,chan,M2,tu)+std::conj(GammGlobal(N,Xbet,k,m,chan,M2,tu))*S0(k,n,chan));
     } 
   return -res*alpha_s/2./M_PI*log(muR*muR/M2)/2.; //Convention Gamma=alpha_s/2.*Pi*Gamma^1+...
 }
@@ -249,14 +243,13 @@ double Gamma_sNindepPhase(double *ppart,int m, int n, int chan, double M2)
   return -res*alpha_s/2./M_PI*log(muR*muR/M2)/2.; //Convention Gamma=alpha_s/2.*Pi*Gamma^1+...
 }
 
-std::complex<double> S1old(double *x, int m, int n, int chan, double M2, int tu) // S1, initial condition of the RGE for mu_S = M_inv/Nb -> no mu_F dependance, S0 factorized out -> see S1t
+std::complex<double> S1old(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu) // S1, initial condition of the RGE for mu_S = M_inv/Nb -> no mu_F dependance, S0 factorized out -> see S1t
 {
   std::complex<double> res=0.;
   double t=0, u=0;
   std::complex<double> Lbet=0., i(0.0,1.0);
-  double Xbet=0, bet=0.;
+  double  bet=0.;
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
-  Xbet=Xcos(x[1])*bet;
   if(tu==1) Xbet*=-1.; // t <-> u
   
   Lbet=(1.+bet*bet)/2./bet*(log((1.-bet)/(1.+bet)));
@@ -345,15 +338,15 @@ std::complex<double> S1Phase(double *ppart, int m, int n, int chan, double M2) /
     return res*alpha_s/2./M_PI;
 }
 
-std::complex<double> SG(double *x, int m, int n, int chan, double M2, int tu)
+std::complex<double> SG(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu)
 {
   std::complex<double> res=0.;
   int Len=chan+2;
-  std::complex<double> Nb=N(x[0])*exp(-Psi(1.));
+  std::complex<double> Nb=N*exp(-Psi(1.));
 
   for(int k=0; k < Len; k++)
     {
-      res+=S0(m,k,chan)*GammGlobal(x,k,n,chan,M2,tu)+std::conj(GammGlobal(x,k,m,chan,M2,tu))*S0(k,n,chan);
+      res+=S0(m,k,chan)*GammGlobal(N,Xbet,k,n,chan,M2,tu)+std::conj(GammGlobal(N,Xbet,k,m,chan,M2,tu))*S0(k,n,chan);
     }
   
   if(isfinite(abs(res))==0){
@@ -381,18 +374,18 @@ std::complex<double> SGPhase(double *ppart, int m, int n, int chan, double M2,do
   return res*(-alpha_s/2./M_PI*log(Nb)); // With covention of literature log(1-2*lambda)*Gamma^1(without alpha)/2*beta0
 }
 
-std::complex<double> S1t(double *x, int m, int n, int chan, double M2, int tu)
+std::complex<double> S1t(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu)
 {
   std::complex<double> res=0.;
   int Len=chan+2;
 
   for(int k=0; k < Len; k++)
     {
-      res+=S1old(x,m,k,chan,M2,tu)*S0(k,n,chan); // S1(muS) 
+      res+=S1old(N,Xbet,m,k,chan,M2,tu)*S0(k,n,chan); // S1(muS) 
     }
 
   res+=S0(m,n,chan)*g3Nindep(chan,M2);
-  res+=Gamma_sNindep(x,m,n,chan,M2,tu);
+  res+=Gamma_sNindep(N,Xbet,m,n,chan,M2,tu);
   res+=S0(m,n,chan)*Beam(chan,M2);
 
   // N resummation gamma_Euler finite reminder
@@ -435,14 +428,14 @@ std::complex<double> S1tPhase(double *ppart, int m, int n, int chan, double M2)
   return res;
 }
 
-std::complex<double> S1mu(double *x, int m, int n, int chan, double M2, int tu)
+std::complex<double> S1mu(std::complex<double> N,double Xbet, int m, int n, int chan, double M2, int tu)
 {
-  std::complex<double> res=0., res2=0., un(1.,0.), Nb=N(x[0])*exp(-Psi(1.)), g1=0.,g2=0.;
+  std::complex<double> res=0., res2=0., un(1.,0.), Nb=N*exp(-Psi(1.)), g1=0.,g2=0.;
   int Len=chan+2;
 
   for(int k=0; k < Len; k++)
     {
-      res+=S1old(x,m,k,chan,M2,tu)*S0(k,n,chan); // S1(muS) 
+      res+=S1old(N,Xbet,m,k,chan,M2,tu)*S0(k,n,chan); // S1(muS) 
       //res+=S0(k,n,chan)*S1oldMu(x,m,k,chan,M2); // S1(muR)
     }
 

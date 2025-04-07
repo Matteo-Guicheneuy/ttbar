@@ -8,6 +8,7 @@
 #include <math.h>
 #include <string>    // String streams                  //
 #include <process.h>
+#include "main.h"
 // ------------------EW Constants ----------------------//
 //Constants found in the MadGraph configuration
 double MZ = 91.188; //Z boson mass in GeV
@@ -37,6 +38,10 @@ double CF=(double(pow(Nc,2))-1.)/2./double(Nc);
 double beta0=23./6., beta1=29./3.;
 double C=2.015, Phi=1.5*M_PI/2.;
 double Q2=pow(2.*Mt,2);
+
+//const int Nflav= usePDFAnzat ? 1 : 5;
+// Precision for numerical derivative for pdf trick
+//const double Eps = 0.00001;
 
 string namePDF="";
 int rep=1; // Number of representations in the process (size of the color matrices)

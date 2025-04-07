@@ -58,7 +58,7 @@ double Integrate(double& res, double& acc, double& sc, int& mel, double& M2)
 }
 
 
-double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& mel, double& M2)
+double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& mel, double& M2, int dim)
 {
   // Initializing the random number generator                                                     
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
@@ -71,7 +71,7 @@ double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& me
   
   // Number of integrations and calls                                                       
   calls=2000;
-  I.dim=2;
+  I.dim=dim;
   
   struct my_f_params { double sc; int mel; double M2; };
   struct my_f_params params = { sc, mel, M2 };

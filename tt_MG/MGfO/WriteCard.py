@@ -2,7 +2,7 @@ import sys
 import copy
 
 def EnergyCard(path,sqrt_s,j):
-    path="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/Cards/"
+    path="/home/matteo/mg5amcnlo/"+path+"/Cards/"
     file = open(path+"run_card.dat", "r")
     replaced_content = ""
     i=0
@@ -33,7 +33,7 @@ def EnergyCard(path,sqrt_s,j):
         elif(line.find(dynscale)>0):
             replaced_content += line.replace("-1","10")
         elif(line.find(acc)>0):
-            replaced_content += line.replace("0.01","0.0001")
+            replaced_content += line.replace("0.01","0.01")
         elif(line.find(Nev)>0):
             replaced_content += line.replace(" 10000 "," 100000 ")
         elif(line.find(pdfw)>0):
@@ -60,10 +60,11 @@ def EnergyCard(path,sqrt_s,j):
 ic=int(sys.argv[2])
 ntot=int(sys.argv[3])
 path=sys.argv[1]
+s=int(sys.argv[5])
 #s0=13000
 s0=7000
 #s0=8000
-s=s0
+#s=s0
 
 # xmi=1000
 # xms=1500
@@ -76,7 +77,7 @@ EnergyCard(path,s,xmi)
 
 
 def FOCard(path):
-    path="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/Cards/"
+    path="/home/matteo/mg5amcnlo/"+path+"/Cards/"
 
     fin = open(path+"FO_analyse_card.dat", "rt")
     fout = open(path+"FO_analyse_card2.dat", "wt")
@@ -91,7 +92,7 @@ FOCard(path)
 
 
 def FOHwU(path,xmi,xms,nbins):
-    path="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/FixedOrderAnalysis/"
+    path="/home/matteo/mg5amcnlo/"+path+"/FixedOrderAnalysis/"
     word="xms="
     wordi="xmi="
     setbins=",xmi,"
@@ -120,7 +121,7 @@ FOHwU(path,xmi,xms,n)
 
 
 def scales(path,n,mi,mf):
-    path="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/SubProcesses/"
+    path="/home/matteo/mg5amcnlo/"+path+"/SubProcesses/"
     word="nbin="
     wordi="mi="
     wordf="mf="
@@ -147,7 +148,7 @@ def scales(path,n,mi,mf):
 scales(path,ntot*n,xmi,xms)
 
 def cuts(path,xms):
-    path="/home/yehudi/MG5_aMC_v3_3_0/"+path+"/SubProcesses/"
+    path="/home/matteo/mg5amcnlo/"+path+"/SubProcesses/"
     wordf="Minv2.gt"
     ct=""
     fin = open(path+"cuts.f", "rt")

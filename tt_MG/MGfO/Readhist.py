@@ -12,9 +12,9 @@ def ReadHisTot(path,k):
     cp=""
     
     if(k<10):
-        fileS = open("/home/yehudi/MG5_aMC_v3_3_0/"+path+"/Events/run_0"+str(int(k))+"/run_0"+str(int(k))+"_tag_1_banner.txt", "r")
+        fileS = open("/home/matteo/mg5amcnlo/"+path+"/Events/run_0"+str(int(k))+"/run_0"+str(int(k))+"_tag_1_banner.txt", "r")
     else:
-        fileS = open("/home/yehudi/MG5_aMC_v3_3_0/"+path+"/Events/run_"+str(int(k))+"/run_"+str(int(k))+"_tag_1_banner.txt", "r")
+        fileS = open("/home/matteo/mg5amcnlo/"+path+"/Events/run_"+str(int(k))+"/run_"+str(int(k))+"_tag_1_banner.txt", "r")
     
     for line in fileS:
         if(line.find(wordS)>0):

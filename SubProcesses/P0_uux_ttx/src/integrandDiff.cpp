@@ -292,20 +292,19 @@ std::complex<double> GlobalDiff(double *x, double sc, double M2) // Resummed for
 }
 // *************************************************** //
 // PDF Trick //
-// *************************************************** //
-double xPDFDiff(double *x , int chan, double sc, double M2, int k) // Resummed formula, the numericall integration does the inversed Mellin transform           
+// *************************************************** // 
+double xPDFDiff(double *x , int chan, double sc, double M2,const LHAPDF::PDF* F ,int k) // Resummed formula, the numericall integration does the inversed Mellin transform           
 {
   double fAB=0., tau=M2/sc, a=-1.;
   double xa=tau/pow(tau,x[3]), xb=tau/pow(tau/xa,x[4])/xa;
-  PDF* F=mkPDF(namePDF,0);
-  fAB=Luminosity(xa, xb, F,a, usePDFAnzat, true, k);
+  //PDF* F=mkPDF(namePDF,0);
+  fAB=Luminosity(xa,xb,F,a,usePDFAnzat,true,k); 
   return fAB;
 }
-
 //------------------------------------------------------------//
 //--------------------Total Integrand-------------------------//
 //------------------------------------------------------------//
-double TotDiff(double *x, double& sc, int& mel, double& M2)
+double TotDiff(double *x, double& sc, int& mel, double& M2,const LHAPDF::PDF* F)
 {
   double res=0., bet, t, hgg,  u, Xbet;
   std::complex<double> temp=0, i(0.0,1.0), Nb;
@@ -454,7 +453,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2)
     {
       std::complex<double> tmp=0.;
       tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
-      res+=imag(tmp*xPDFDiff(x,chan,sc,M2,2)*GlobalDiff(x,sc,M2));
+      res+=imag(tmp*xPDFDiff(x,chan,sc,M2,F,2)*GlobalDiff(x,sc,M2));
     }
 
   if(isfinite(res)==0){

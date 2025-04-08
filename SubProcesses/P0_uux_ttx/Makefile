@@ -50,8 +50,8 @@ PSLIB= -L${PSDIR} -lgenps
 all: RUN
 lib: ${LIB}
 
-RUN: main.cpp ${LIB}
-	${CC} ${CFLAG} -o $@ main.cpp ${LIB} ${STLIB} ${GSLIB} ${LHAPDFLIB} ${INTLIB} ${PSLIB} $(MADLOOPLIB) -ldl ${MPLIB} ${LCTLIB} ${REGILIB} -lquadmath -lgfortran 
+RUN: main-test.cpp ${LIB}
+	${CC} ${CFLAG} -o $@ main-test.cpp ${LIB} ${STLIB} ${GSLIB} ${LHAPDFLIB} ${INTLIB} ${PSLIB} $(MADLOOPLIB) -ldl ${MPLIB} ${LCTLIB} ${REGILIB} -lquadmath -lgfortran 
 
 
 ${LIB}:	${COBJS} ${FOBJS}

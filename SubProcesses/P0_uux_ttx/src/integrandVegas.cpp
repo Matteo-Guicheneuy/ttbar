@@ -21,7 +21,7 @@ std::complex<double> Psi(std::complex<double>);
 double Xcos(double);
 double Xsin(double);
 
-struct my_f_params { double sc; int mel; double M2; };  
+struct my_f_params { double sc; int mel; double M2; const LHAPDF::PDF* F;};  
 
 extern "C"{
   //void update_mur_(double&);
@@ -41,7 +41,8 @@ double TotVegas(double *x, size_t dim, void *params)
   std::complex<double> temp=0, i(0.0,1.0), n, Nb;
   
   struct my_f_params * fparams = (struct my_f_params *)params;  
-  double M2=fparams->M2, sc=fparams->sc;
+  double M2=fparams->M2, sc=fparams->sc; 
+  const LHAPDF::PDF* F=fparams->F;
   int mel=fparams->mel;
   n=N(x[0]);
   Nb=n*exp(-Psi(1.));
@@ -180,6 +181,12 @@ double TotVegas(double *x, size_t dim, void *params)
       tu=1;
       
       res+=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
+    }
+    else if(mel==4)
+    {
+      std::complex<double> tmp=0.;
+      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
+      res=std::imag(tmp*xPDFDiff(x,chan,sc,M2,F,2)*GlobalDiff(x,sc,M2));
     }
 
   

@@ -17,22 +17,22 @@
 // -------- Functions --------------------------------- //
 
 using namespace LHAPDF;
-double TotDiff(double*,double&,int&,double&);
+double TotDiff(double*,double&,int&,double&,const LHAPDF::PDF* F);
 double TotPhaseSpace(double*, size_t, void*);
 double TotVegas(double*, size_t, void*);
 void DisplayXsec(const double&,const double&,const std::string&); //
 
 extern "C"{
-  void __nintlib_MOD_romberg_nd(double(*)(int&, double *, double&, int&, double&) ,double*,double*,int&,int*,int&,double&,double&,int&,int&,double&,int&,double&);
+  void __nintlib_MOD_romberg_nd(double(*)(int&, double *, double&, int&, double&,const LHAPDF::PDF*) ,double*,double*,int&,int*,int&,double&,double&,int&,int&,double&,int&,double&,const LHAPDF::PDF*);
 }
 
 extern int npart;
 
-double NewTot(int& dim_num, double* x, double& sc, int& mel, double& M2){
-  return TotDiff(x,sc,mel,M2);
+double NewTot(int& dim_num, double* x, double& sc, int& mel, double& M2,const LHAPDF::PDF* F){
+  return TotDiff(x,sc,mel,M2,F);
 }
 
-double Integrate(double& res, double& acc, double& sc, int& mel, double& M2)
+double Integrate(double& res, double& acc, double& sc, int& mel, double& M2, const LHAPDF::PDF* F)
 {
   double init=1e-5, end=1.; //Not 0 to 1 for finite evaluations only
   double resbis=0.;
@@ -50,7 +50,7 @@ double Integrate(double& res, double& acc, double& sc, int& mel, double& M2)
   
   acc=1e-5;
 
-  __nintlib_MOD_romberg_nd(NewTot,a,b,dim_num,sum_num,it_max,acc,res,ind,eval_num,sc,mel,M2);
+  __nintlib_MOD_romberg_nd(NewTot,a,b,dim_num,sum_num,it_max,acc,res,ind,eval_num,sc,mel,M2,F);
   //__nintlib_MOD_romberg_nd(NewTot,abis,bbis,dim_num,sum_num,it_max,acc,resbis,ind,eval_num,sc,mel,M2);
   //if(abs(res-resbis)>abs(res)*5.*acc) std::cout << " WARNING: INTEGRATION SENSITIVE TO INTEGRAL RANGES" << std::endl;
   
@@ -58,7 +58,7 @@ double Integrate(double& res, double& acc, double& sc, int& mel, double& M2)
 }
 
 
-double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& mel, double& M2, int dim)
+double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& mel, double& M2, const LHAPDF::PDF* F,int dim)
 {
   // Initializing the random number generator                                                     
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
@@ -73,8 +73,8 @@ double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& me
   calls=2000;
   I.dim=dim;
   
-  struct my_f_params { double sc; int mel; double M2; };
-  struct my_f_params params = { sc, mel, M2 };
+  struct my_f_params { double sc; int mel; double M2; const LHAPDF::PDF* F; };
+  struct my_f_params params = { sc, mel, M2, F };
   
   
   // Selecting the good integrand + includes in the variable factor the                       
@@ -98,7 +98,7 @@ double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& me
   
   // Real things: stops if the precision reaches 1% or if one oscillates                      
   int counter=1; s->iterations=3;
-  while(prec>5e-3 && counter<=10)
+  while(prec>5e-4 && counter<=10)
     {
       std::ostringstream ocnt; ocnt << counter; std::string cntstr= ocnt.str();
       s->stage=1;

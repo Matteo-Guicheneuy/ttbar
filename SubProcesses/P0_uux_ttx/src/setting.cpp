@@ -423,9 +423,9 @@ double Luminosity(double &xa, double &xb, const PDF* F,const double &a, const bo
     set_pdf(F, xa, qa, qbara, ga, usePDFAnzat, k, num);
     set_pdf(F, xb, qb, qbarb, gb, usePDFAnzat, k, num);
     // Compute fAB contributions
-    for (int fl = 0; fl < Nflav; ++fl) fAB += (fl%2==0 ? gd : gu)*(qq ? qa[fl]*qbarb[fl] + qb[fl]*qbara[fl] : qa[fl]*gb+qb[fl]*ga+qbara[fl]*gb+qbarb[fl]*ga) ;
+    for (int fl = 0; fl < Nflav; ++fl) fAB += (qq ? qa[fl]*qbarb[fl] + qb[fl]*qbara[fl] : qa[fl]*gb+qb[fl]*ga+qbara[fl]*gb+qbarb[fl]*ga) ;
     // Remove charm quark
-    if(remove_charm_quark) fAB-= gu*(qq ? qa[3]*qbarb[3] + qb[3]*qbara[3] : qa[3]*gb+qb[3]*ga+qbara[3]*gb+qbarb[3]*ga);
+    if(remove_charm_quark) fAB-= (qq ? qa[3]*qbarb[3] + qb[3]*qbara[3] : qa[3]*gb+qb[3]*ga+qbara[3]*gb+qbarb[3]*ga);
     //PDF Anzat
     if(usePDFAnzat) fAB=qa[0]*qbarb[0];
 

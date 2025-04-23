@@ -256,6 +256,7 @@ std::complex<double> MellinPDFDiff(std::complex<double > N, int chan, double M2)
     {
       //fAB=2.*Nf/(Npdf-1.)/(Npdf*Npdf)/(Npdf-1.); // Ansatz qqb    
       for(int j=0; j < Nf; j++) fAB+=q[j]*qbar[j];  // Carefull, beyond LO not symmetric in cos(theta) -> no factor 2 but 2 terms
+      if(remove_charm_quark) fAB-=q[3]*qbar[3];
     }
   else if(chan==1) exit(1);       
 
@@ -280,7 +281,7 @@ std::complex<double> GlobalDiff(double *x, double sc, double M2) // Resummed for
   // Change of variable 2
   bet=pow(1.-4.*Mt*Mt/M2,0.5);
   jac2=20.-10.*pow(tanh(20.*x[1]-5.),2)-10.*pow(tanh(20.*x[1]-15.),2);
-
+  
   //Global factors
   res=pow(tau,-N(x[0])+1.)*2./2./M_PI; //*2 from Im part, /2*M_PI from inverse Mellin transform, N-1 because the functions are supposed to be evaluated at N+1 when taking the Mellin inverse in N
   res*=bet/16./M_PI/M2; 
@@ -296,10 +297,38 @@ std::complex<double> GlobalDiff(double *x, double sc, double M2) // Resummed for
 double xPDFDiff(double *x , int chan, double sc, double M2,const LHAPDF::PDF* F ,int k) // Resummed formula, the numericall integration does the inversed Mellin transform           
 {
   double fAB=0., tau=M2/sc, a=-1.;
-  double xa=tau/pow(tau,x[3]), xb=tau/pow(tau/xa,x[4])/xa;
+  double xa=tau/pow(tau,x[2]), xb=tau/pow(tau/xa,x[3])/xa;
   //PDF* F=mkPDF(namePDF,0);
-  fAB=Luminosity(xa,xb,F,a,usePDFAnzat,true,k); 
+  fAB=1./2.*Luminosity(xa,xb,F,a,usePDFAnzat,true,k); 
   return fAB;
+}
+
+
+std::complex<double> GlobalDiffPDF(double *x, double a,double sc, double M2) // Resummed formula, the numericall integration does the inversed Mellin transform
+{  
+  std::complex<double> i(0.0,1.0), res=0, jac=0;
+  double jac2=0., bet=0., jacpdf=0.;
+  double tau = M2/sc;
+  
+  // Change of variable
+  jac = (cos(Phi)+i*sin(Phi))/x[0];
+  
+  // Change of variable 2
+  bet=pow(1.-4.*Mt*Mt/M2,0.5);
+  jac2=20.-10.*pow(tanh(20.*x[1]-5.),2)-10.*pow(tanh(20.*x[1]-15.),2);
+  
+  //Global factors
+  res=bet/16./M_PI/M2; 
+
+  // PDF trick factor
+  double xa=tau/pow(tau,x[2]), xb=tau/pow(tau/xa,x[3])/xa;
+  jacpdf= xa*xb*pow(log(tau),2.)*x[2];
+    //std::cout << x[2] <<" xa= " << xa << " xb= " << xb << " tau= " << tau <<" jacpdf = " << jacpdf << std::endl;
+  // Result
+  res*=pow(tau/xa/xb,-N(x[0])+1.-a)/xa/xb*2./2./M_PI; //*2 from Im part, /2*M_PI from inverse Mellin transform, N-1 because the functions are supposed to be evaluated at N+1 when taking the Mellin inverse in N
+  res=res*jac*jac2*jacpdf*0.38937966e9;//*jac3;
+
+  return res;
 }
 //------------------------------------------------------------//
 //--------------------Total Integrand-------------------------//
@@ -317,7 +346,7 @@ double TotDiff(double *x, double& sc, int& mel, double& M2,const LHAPDF::PDF* F)
     {
       std::complex<double> tmp=0.;
       tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
-      res+=std::imag(tmp*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
+      res+=1./M_PI*std::imag(tmp*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
 
   else if(mel==1) //Diff and NLL
@@ -452,8 +481,10 @@ double TotDiff(double *x, double& sc, int& mel, double& M2,const LHAPDF::PDF* F)
     else if(mel==4)
     {
       std::complex<double> tmp=0.;
-      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
-      res+=imag(tmp*xPDFDiff(x,chan,sc,M2,F,2)*GlobalDiff(x,sc,M2));
+      double a=-1.;
+      tmp=TraceBornDiff(n-1.,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
+      std::complex<double> g_12=std::pow(n+a-1.,-2.*2);// fake pdf
+      res=M_PI*imag(tmp*g_12*xPDFDiff(x,chan,sc,M2,F,2)*GlobalDiffPDF(x,a,sc,M2));
     }
 
   if(isfinite(res)==0){

@@ -69,8 +69,9 @@ s0=7000
 # xmi=1000
 # xms=1500
 #xmi=2*172.7
-xmi=2*173.2
-xms=500
+# Def Invariant mass
+xmi=3*173.2
+xms=8*173.2
 #xms=4000+2*173.2
 
 EnergyCard(path,s,xmi)

@@ -98,7 +98,7 @@ double IntegrateVegas(double& res, double& err, double& chi, double& sc, int& me
   
   // Real things: stops if the precision reaches 1% or if one oscillates                      
   int counter=1; s->iterations=3;
-  while(prec>5e-4 && counter<=10)
+  while(prec>5.e-3 && counter<=5)
     {
       std::ostringstream ocnt; ocnt << counter; std::string cntstr= ocnt.str();
       s->stage=1;
@@ -157,7 +157,7 @@ double IntegratePhase(double& res, double& err, double& chi, double& sc, int& me
   
   // Real things: stops if the precision reaches 1% or if one oscillates                      
   int counter=1; s->iterations=3;
-  while(prec>5e-2 && counter<=10)
+  while(prec>5e-3 && counter<=10)
     {
       std::ostringstream ocnt; ocnt << counter; std::string cntstr= ocnt.str();
       s->stage=1;

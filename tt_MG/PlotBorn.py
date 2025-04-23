@@ -110,21 +110,28 @@ def loadataMycode(order,res,resExt):
 
 def loadataMG(order,res,resExt):
     MadG=np.loadtxt('MGfO/data/Minv'+order+'_ttx1_dXsec.txt',delimiter=" ")
-    MG=np.transpose(MadG)[0]
-    MR=np.transpose(MadG)[1]
+    #column 0: lower bin edge
+    #column 1: upper bin edge
+    #column 2: central cross-section value
+    #columns 10+: uncertainty estimates from scale/PDF variations
+
+    MG=np.transpose(MadG)[0] # lower edges of bins
+    MR=np.transpose(MadG)[1] # upper edges of bins
     indix=np.array([10,11,12,13,14,16,18])
     resExt=np.zeros((2,len(MG)))
-    for k in range(len(MG)):
+    
+    for k in range(len(MG)): #Uncertainty bound calculation
         resExt[0][k]=min(np.transpose(MadG)[p][k] for p in indix)
         resExt[1][k]=max(np.transpose(MadG)[p][k] for p in indix)
 
     res,MG,MR=surmerge(np.transpose(MadG)[2],np.transpose(MadG)[0],np.transpose(MadG)[1],n1,n2,nm)
 
     resExtf=np.zeros((2,len(MG)))
+    # Merge the bin to have a better result
     resExtf[0],MG,MR=surmerge(resExt[0],np.transpose(MadG)[0],np.transpose(MadG)[1],n1,n2,nm)
     resExtf[1],MG,MR=surmerge(resExt[1],np.transpose(MadG)[0],np.transpose(MadG)[1],n1,n2,nm)
 
-    res=res/(MR-MG)
+    res=res/(MR-MG) #dsigma/dM
     resExtf[0]=resExtf[0]/(MR-MG)
     resExtf[1]=resExtf[1]/(MR-MG)
 

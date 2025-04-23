@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
 		  double res0=0., err0=0., chi0=0.;
 		  //mel=1; //Careful, test
 		  //Integrate(res0,err0,s,mel,M2);
-		  //IntegrateVegas(res0,err0,chi0,s,mel,M2,2);
+		  IntegrateVegas(res0,err0,chi0,s,mel,M2,2);
 		  //IntegratePhase(res0,err0,chi0,s,mel,M2);
 		  std::cout << "Resummed done " << std::endl;
 		  // Writing in output file

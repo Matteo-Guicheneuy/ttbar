@@ -53,9 +53,18 @@ double TotVegas(double *x, size_t dim, void *params)
   if(mel==0)
     {
       std::complex<double> tmp=0.;      
-      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.;
+      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.;  res*=2./2./M_PI;
       res=std::imag(tmp*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
+    else if(mel==4)
+    {
+      std::complex<double> tmp=0.;
+      double a=-1.;
+      int k=2;
+      tmp=TraceBornDiff(n+a,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
+      std::complex<double> g_12=std::pow(n+a-1.,-2.*k);// fake pdf
+      res=std::imag(tmp*g_12*xPDFDiff(x,chan,sc,M2,F,k)*GlobalDiffPDF(x,a,sc,M2));
+        }
 
   else if(mel==1) //Diff
     {
@@ -101,6 +110,10 @@ double TotVegas(double *x, size_t dim, void *params)
 
       res-=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
+    else if(mel==5) //diff pdf trick
+    {
+      res=0.;
+    }
 
     else if(mel==2) //NLL 
     {
@@ -127,7 +140,7 @@ double TotVegas(double *x, size_t dim, void *params)
       ppart[2][3]=pow(M2,0.5)/2.*Xbet;
       ppart[3][3]=-pow(M2,0.5)/2.*Xbet;
       
-      //ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
+      ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
 
       res=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
@@ -136,11 +149,55 @@ double TotVegas(double *x, size_t dim, void *params)
       ppart[3][3]=pow(M2,0.5)/2.*Xbet;
       ppart[2][3]=-pow(M2,0.5)/2.*Xbet;
       
-      //ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
+      ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
       tu=1;
       
       res+=std::imag(TraceHSDiff(n,Xbet,chan,M2,xx2,tu)*ColinearDiff(n,chan,M2)*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
       
+    }
+    else if(mel==6)// NLL PDF trick
+    {
+      // Kinematics
+      int tu=0;
+      complex<double> *xx;
+      xx=new complex<double>[4*2*2];
+      complex<double> *xx2;
+      xx2=new complex<double>[4*2*2];
+      double ppart[4][4]={0.};
+      int ret_code=0;
+      double prec_ask=-1;
+      double prec_f[2][2]={(0.,0.)};
+
+      ppart[0][0]=pow(M2,0.5)/2.;
+      ppart[1][0]=pow(M2,0.5)/2.;
+      ppart[0][3]=pow(M2,0.5)/2.;
+      ppart[1][3]=-pow(M2,0.5)/2.;
+
+      ppart[2][0]=pow(M2,0.5)/2.;
+      ppart[3][0]=pow(M2,0.5)/2.;
+
+      ppart[2][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[3][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[2][3]=pow(M2,0.5)/2.*Xbet;
+      ppart[3][3]=-pow(M2,0.5)/2.*Xbet;
+      // PDf trick variables
+      double a=3.;
+      int k=2;
+      std::complex<double> g_12=std::pow(n+a-1.,-2.*k);// fake pdf
+
+      ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
+      res=std::imag(TraceHSDiff(n+a,Xbet,chan,M2,xx,tu)*ColinearDiff(n+a,chan,M2)*g_12*xPDFDiff(x,chan,sc,M2,F,k)*GlobalDiffPDF(x,a,sc,M2));
+      //std::cout << "res " <<TraceHSDiff(n+a,Xbet,chan,M2,xx,tu)*ColinearDiff(n+a,chan,M2) << std::endl;
+      //std::cout  << g_12 << " "<< xPDFDiff(x,chan,sc,M2,F,k) << " "<< GlobalDiffPDF(x,a,sc,M2) << std::endl;
+      ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[3][3]=pow(M2,0.5)/2.*Xbet;
+      ppart[2][3]=-pow(M2,0.5)/2.*Xbet;
+      
+      ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
+      tu=1;
+      res+=std::imag(TraceHSDiff(n+a,Xbet,chan,M2,xx2,tu)*ColinearDiff(n+a,chan,M2)*g_12*xPDFDiff(x,chan,sc,M2,F,k)*GlobalDiffPDF(x,a,sc,M2));
+
     }
 
     else if(mel==3) //Exp
@@ -182,11 +239,48 @@ double TotVegas(double *x, size_t dim, void *params)
       
       res+=std::imag((TraceHSExpDiff(n,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n,chan,M2))*TraceBornDiff(n,Xbet,chan,M2))*MellinPDFDiff(n,chan,M2)*GlobalDiff(x,sc,M2));
     }
-    else if(mel==4)
+    else if(mel==7) //Exp
     {
-      std::complex<double> tmp=0.;
-      tmp=TraceBornDiff(n,Xbet,chan,M2)*2.; // *2 because of qqb <-> qbq symmetry 
-      res=std::imag(tmp*xPDFDiff(x,chan,sc,M2,F,2)*GlobalDiff(x,sc,M2));
+      int tu=0;
+      complex<double> *xx;
+      xx=new complex<double>[4*2*2];
+      complex<double> *xx2;
+      xx2=new complex<double>[4*2*2];
+      double ppart[4][4]={0.};
+      int ret_code=0;
+      double prec_ask=-1;
+      double prec_f[2][2]={(0.,0.)};
+
+      ppart[0][0]=pow(M2,0.5)/2.;
+      ppart[1][0]=pow(M2,0.5)/2.;
+      ppart[0][3]=pow(M2,0.5)/2.;
+      ppart[1][3]=-pow(M2,0.5)/2.;
+
+      ppart[2][0]=pow(M2,0.5)/2.;
+      ppart[3][0]=pow(M2,0.5)/2.;
+
+      ppart[2][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[3][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[2][3]=pow(M2,0.5)/2.*Xbet;
+      ppart[3][3]=-pow(M2,0.5)/2.*Xbet;
+
+      double a=3.;
+      int k=2;
+      std::complex<double> g_12=std::pow(n+a-1.,-2.*k);// fake pdf
+      
+      //ml5_0_sloopmatrix_thres_(ppart,xx,prec_ask,prec_f,ret_code);
+
+      res=std::imag((TraceHSExpDiff(n+a,Xbet,chan,M2,xx,tu)+(1.+ColinearExpDiff(n+a,chan,M2))*TraceBornDiff(n+a,Xbet,chan,M2))*g_12*xPDFDiff(x,chan,sc,M2,F,k)*GlobalDiffPDF(x,a,sc,M2));
+
+      ppart[3][2]=pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[2][2]=-pow(M2,0.5)/2.*bet*Xsin(x[1]);
+      ppart[3][3]=pow(M2,0.5)/2.*Xbet;
+      ppart[2][3]=-pow(M2,0.5)/2.*Xbet;
+      
+      //ml5_0_sloopmatrix_thres_(ppart,xx2,prec_ask,prec_f,ret_code);
+      tu=1;
+      
+      res+=std::imag((TraceHSExpDiff(n+a,Xbet,chan,M2,xx2,tu)+(1.+ColinearExpDiff(n+a,chan,M2))*TraceBornDiff(n+a,Xbet,chan,M2))*g_12*xPDFDiff(x,chan,sc,M2,F,k)*GlobalDiffPDF(x,a,sc,M2));
     }
 
   
